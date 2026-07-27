@@ -1,0 +1,79 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  pointer-events: none;
+  animation: scare-shake 0.32s ease-in-out 1;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  animation: scare-flash 0.2s ease-out forwards;
+  z-index: 2;
+}
+
+.face {
+  width: 100%;
+  height: 100%;
+  /* * Aspect-matched assets (9:16 / 16:9) fill the screen without a bad crop. */
+  object-fit: cover;
+  object-position: center center;
+  transform: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+}
+
+@keyframes scare-flash {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes scare-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-10px, 4px, 0);
+  }
+  40% {
+    transform: translate3d(12px, -6px, 0);
+  }
+  60% {
+    transform: translate3d(-8px, -3px, 0);
+  }
+  80% {
+    transform: translate3d(7px, 5px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .flash {
+    animation: none;
+  }
+
+  .flash {
+    opacity: 0;
+  }
+}

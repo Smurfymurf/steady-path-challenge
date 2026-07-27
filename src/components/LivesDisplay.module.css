@@ -1,0 +1,46 @@
+.lives {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 72px;
+  padding: 8px 10px 7px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #ffe8ef 100%);
+  box-shadow:
+    0 4px 0 #e91e63,
+    0 8px 16px rgba(233, 30, 99, 0.28);
+}
+
+.label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c2185b;
+  line-height: 1;
+}
+
+.row {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.life {
+  font-size: 1.45rem;
+  line-height: 1;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.filled {
+  opacity: 1;
+  transform: scale(1);
+  filter: drop-shadow(0 2px 4px rgba(255, 61, 127, 0.45));
+}
+
+.empty {
+  opacity: 0.28;
+  transform: scale(0.9);
+  color: #c7a0b0 !important;
+}

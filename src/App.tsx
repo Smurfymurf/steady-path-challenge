@@ -1,16 +1,36 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AdminOffers } from './components/AdminOffers';
 import { LandingScreen } from './components/LandingScreen';
 import { GameScreen } from './components/GameScreen';
+import { GameOverScreen } from './components/GameOverScreen';
+import { SpinWheel } from './components/SpinWheel';
 import { gameConfig, type GameState } from './config/game';
+import { getLevel, hasNextLevel } from './config/levels';
+import { getWheelForGeo, type WheelConfig } from './config/offers';
+import { detectVisitorGeo } from './game/geo';
+import { fetchWheelForGeo } from './game/liveOffers';
 import {
+  finaleTitle,
+  sumLevelScores,
+  type LevelScoreResult,
+} from './game/scoring';
+import {
+  advanceLevel,
   createSession,
   recordFailure,
   recordLevelComplete,
   recordProgress,
+  resetRunFromLevelOne,
   type SessionState,
 } from './game/session';
+import { playSfx, setSoundEnabled as setAudioEnabled } from './game/sound';
+import type { FailKind } from './components/GameScreen';
 import './styles/global.css';
 import './styles/game.css';
+
+function isAdminPath(): boolean {
+  return window.location.pathname.replace(/\/+$/, '') === '/admin';
+}
 
 function tryEnterFullscreen(): void {
   const root = document.documentElement;
@@ -23,42 +43,177 @@ function tryEnterFullscreen(): void {
   });
 }
 
+function readDemoLevelFromUrl(): number | null {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('level') ?? params.get('demo');
+  if (!raw) {
+    return null;
+  }
+  const level = Number.parseInt(raw, 10);
+  if (!Number.isFinite(level)) {
+    return null;
+  }
+  try {
+    getLevel(level);
+    return level;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
+  const [isAdmin, setIsAdmin] = useState(isAdminPath);
   const [gameState, setGameState] = useState<GameState>('landing');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(
     gameConfig.soundEnabledByDefault,
   );
-  const [session, setSession] = useState<SessionState | null>(null);
 
-  const handleStart = useCallback(() => {
-    const nextSession = createSession(soundEnabled);
-    setSession(nextSession);
-    setGameState('playing');
-    tryEnterFullscreen();
+  useEffect(() => {
+    setAudioEnabled(soundEnabled);
   }, [soundEnabled]);
 
-  const handleProgress = useCallback((progress: number) => {
-    setSession((current) => (current ? recordProgress(current, progress) : current));
+  const [session, setSession] = useState<SessionState | null>(null);
+  const [wheel, setWheel] = useState<WheelConfig>(() => getWheelForGeo('FALLBACK'));
+  const [pendingScore, setPendingScore] = useState<LevelScoreResult | null>(null);
+  const sessionRef = useRef<SessionState | null>(null);
+  const demoBootstrapped = useRef(false);
+
+  const updateSession = useCallback((next: SessionState | null) => {
+    sessionRef.current = next;
+    setSession(next);
   }, []);
 
-  const handleFailure = useCallback((progress: number) => {
-    setSession((current) => {
-      if (!current) {
-        return current;
+  useEffect(() => {
+    let cancelled = false;
+    detectVisitorGeo().then(async (result) => {
+      if (cancelled) {
+        return;
       }
-      const withProgress = recordProgress(current, progress);
-      return recordFailure(withProgress);
+      const liveWheel = await fetchWheelForGeo(result.offerGeo);
+      if (!cancelled) {
+        setWheel(liveWheel);
+      }
     });
-    setGameState('normalFailure');
-    window.setTimeout(() => {
-      setGameState('playing');
-    }, gameConfig.normalFailureMessageMs);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleLevelComplete = useCallback(() => {
-    setSession((current) => (current ? recordLevelComplete(current) : current));
+  if (isAdmin) {
+    return (
+      <AdminOffers
+        onExit={() => {
+          window.history.pushState({}, '', '/');
+          setIsAdmin(false);
+        }}
+      />
+    );
+  }
+
+  const beginAtLevel = useCallback((levelId: number) => {
+    const nextSession = createSession(soundEnabled, levelId);
+    updateSession(nextSession);
+    setPendingScore(null);
+    setGameState('playing');
+    tryEnterFullscreen();
+  }, [soundEnabled, updateSession]);
+
+  useEffect(() => {
+    if (demoBootstrapped.current) {
+      return;
+    }
+    const demoLevel = readDemoLevelFromUrl();
+    if (!demoLevel) {
+      return;
+    }
+    demoBootstrapped.current = true;
+    beginAtLevel(demoLevel);
+  }, [beginAtLevel]);
+
+  const handleStart = useCallback(() => {
+    playSfx('go');
+    beginAtLevel(1);
+  }, [beginAtLevel]);
+
+  const handleProgress = useCallback((progress: number) => {
+    const current = sessionRef.current;
+    if (!current) {
+      return;
+    }
+    updateSession(recordProgress(current, progress));
+  }, [updateSession]);
+
+  const handleFailure = useCallback((progress: number, kind: FailKind = 'wall') => {
+    const current = sessionRef.current;
+    if (!current) {
+      return;
+    }
+
+    // * Wall hits already blasted a scream in GameScreen; soft timeout keeps the UI blip.
+    if (kind === 'timeout') {
+      playSfx('fail');
+    }
+
+    const failed = recordFailure(recordProgress(current, progress));
+    updateSession(failed);
+
+    // * Overlay hold already finished in GameScreen before this fires.
+    if (failed.lives <= 0) {
+      setGameState('gameOver');
+      return;
+    }
+    setGameState('playing');
+  }, [updateSession]);
+
+  const handleLevelComplete = useCallback((score: LevelScoreResult) => {
+    const current = sessionRef.current;
+    if (!current) {
+      return;
+    }
+
+    const completed = recordLevelComplete(current, score);
+    updateSession(completed);
+    setPendingScore(score);
     setGameState('levelComplete');
-  }, []);
+  }, [updateSession]);
+
+  const handleContinueFromScore = useCallback(() => {
+    const current = sessionRef.current;
+    if (!current) {
+      return;
+    }
+
+    playSfx('whoosh');
+    setPendingScore(null);
+    if (hasNextLevel(current.currentLevel)) {
+      updateSession(advanceLevel(current));
+      setGameState('playing');
+      return;
+    }
+    playSfx('success');
+    setGameState('allComplete');
+  }, [updateSession]);
+
+  const handleRestartFromGameOver = useCallback(() => {
+    playSfx('tap');
+    const current = sessionRef.current;
+    if (!current) {
+      beginAtLevel(1);
+      return;
+    }
+    updateSession(resetRunFromLevelOne(current));
+    setPendingScore(null);
+    setGameState('playing');
+  }, [beginAtLevel, updateSession]);
+
+  const handlePlayAgain = useCallback(() => {
+    playSfx('tap');
+    updateSession(null);
+    setPendingScore(null);
+    setGameState('landing');
+  }, [updateSession]);
+
+  const grandTotal = session ? sumLevelScores(session.levelScores) : 0;
 
   return (
     <div className="app-shell">
@@ -69,7 +224,16 @@ export default function App() {
       {gameState === 'landing' && (
         <LandingScreen
           soundEnabled={soundEnabled}
-          onToggleSound={() => setSoundEnabled((value) => !value)}
+          onToggleSound={() => {
+            setSoundEnabled((value) => {
+              const next = !value;
+              setAudioEnabled(next);
+              if (next) {
+                playSfx('toggle');
+              }
+              return next;
+            });
+          }}
           onStart={handleStart}
         />
       )}
@@ -79,11 +243,77 @@ export default function App() {
         || gameState === 'levelComplete')
         && session && (
         <GameScreen
+          key={session.currentLevel}
           levelId={session.currentLevel}
+          lives={session.lives}
+          levelFailures={session.failuresByLevel[session.currentLevel] ?? 0}
           onFailure={handleFailure}
           onLevelComplete={handleLevelComplete}
+          onContinueFromScore={handleContinueFromScore}
           onProgress={handleProgress}
+          onHome={handlePlayAgain}
+          showScoreCard={gameState === 'levelComplete'}
+          pendingScore={pendingScore}
         />
+      )}
+
+      {gameState === 'gameOver' && session && (
+        <GameOverScreen
+          furthestLevel={session.furthestLevel}
+          onSpin={() => {
+            playSfx('tap');
+            setGameState('spinWheel');
+          }}
+          onRestart={handleRestartFromGameOver}
+        />
+      )}
+
+      {gameState === 'spinWheel' && (
+        <SpinWheel
+          wheel={wheel}
+          onClose={() => {
+            playSfx('tap');
+            setGameState('gameOver');
+          }}
+        />
+      )}
+
+      {gameState === 'allComplete' && session && (
+        <main className="all-complete">
+          <p className="all-complete__eyebrow">Challenge clear</p>
+          <h1 className="all-complete__title">{finaleTitle(grandTotal)}</h1>
+          <p className="all-complete__total">{grandTotal} total points</p>
+          <ul className="all-complete__scores">
+            {session.levelScores.map((score) => (
+              <li key={score.levelId}>
+                <span>
+                  Level {score.levelId}
+                  <small>{score.title}</small>
+                </span>
+                <strong>
+                  {score.grade} · {score.totalPoints}
+                </strong>
+              </li>
+            ))}
+          </ul>
+          <p className="all-complete__body">
+            Wall hits: {session.totalFailures}. Accuracy avg:{' '}
+            {session.levelScores.length
+              ? Math.round(
+                session.levelScores.reduce((sum, s) => sum + s.accuracyPct, 0)
+                  / session.levelScores.length,
+              )
+              : 0}
+            %.
+          </p>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handlePlayAgain}
+          >
+            Play again
+          </button>
+        </main>
       )}
     </div>
   );

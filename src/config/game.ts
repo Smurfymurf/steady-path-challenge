@@ -1,33 +1,39 @@
 /**
- * Central gameplay configuration for the Phase 1 prototype.
- * Scare / share / analytics settings are reserved for later phases.
+ * Central gameplay configuration.
  */
 export const gameConfig = {
-  gameName: 'Steady Path Challenge',
-  tagline: 'Three levels. Don’t touch the walls.',
+  gameName: 'Finger Challenge',
+  tagline: 'Beat the clock.\nDon’t touch the walls.',
   challengeLine: 'How steady is your finger?',
   levels: 3,
+  startingLives: 3,
+  /** Fallback hold if score card is skipped. */
+  levelCompleteHoldMs: 900,
   normalFailureFlashMs: 220,
-  /** How long the failure message overlay stays visible. */
+  /** Soft failure (timeout) overlay hold. */
   normalFailureMessageMs: 900,
-  failureMessage: 'You touched the wall. Try again.',
+  /** Quick shock then clear — wall-hit jump scare hold. */
+  jumpScareHoldMs: 950,
+  failureMessage: 'You touched the wall!',
+  timeoutMessage: 'Time’s up!',
+  outOfLivesMessage: 'Out of lives!',
   soundEnabledByDefault: true,
   vibrationEnabledByDefault: true,
-  /** Visual corridor width in SVG user units (scaled to screen). */
-  visualPathWidth: 60,
-  /**
-   * Valid interaction corridor width. Slightly narrower than the visual path
-   * so the collision boundary sits inside the visible wall edge.
-   */
-  interactionPathWidth: 50,
   /** Max progress jump allowed between pointer samples before treating as a skip. */
-  maxProgressSkip: 0.08,
+  maxProgressSkip: 0.1,
   /** How close to the end (0–1) counts as reaching the finish zone via the path. */
   finishProgressThreshold: 0.92,
+  /** Edge ratio above this counts as a near-miss (0–1 of half-width used). */
+  nearMissEdgeRatio: 0.78,
+  shareUrl: 'https://steady-path-challenge.netlify.app',
+  shareText: 'I dare you to beat Finger Challenge without touching the walls.',
 } as const;
 
 export type GameState =
   | 'landing'
   | 'playing'
   | 'levelComplete'
-  | 'normalFailure';
+  | 'normalFailure'
+  | 'gameOver'
+  | 'spinWheel'
+  | 'allComplete';

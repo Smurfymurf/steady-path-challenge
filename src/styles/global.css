@@ -1,19 +1,20 @@
 :root {
   color-scheme: light;
-  --color-bg: #f7f8fb;
+  --color-bg: #fff6fb;
   --color-surface: #ffffff;
-  --color-text: #1a1f36;
-  --color-muted: #5b647a;
-  --color-primary: #2f6bff;
-  --color-accent: #19c37d;
-  --color-failure: #ff3b4a;
-  --color-border: #e4e8f1;
+  --color-text: #1b1240;
+  --color-muted: #5a4f7a;
+  --color-primary: #ff3d7f;
+  --color-accent: #00d4aa;
+  --color-failure: #ff2e4d;
+  --color-border: #eadfff;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --font-display: 'Trebuchet MS', 'Segoe UI', sans-serif;
-  --font-body: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-logo: 'Lilita One', 'Trebuchet MS', sans-serif;
+  --font-display: 'Lilita One', 'Trebuchet MS', sans-serif;
+  --font-body: 'Nunito', 'Segoe UI', 'Helvetica Neue', sans-serif;
 }
 
 *,

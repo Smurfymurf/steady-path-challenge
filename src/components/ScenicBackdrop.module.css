@@ -1,0 +1,157 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.playfield {
+  /* * Keep the trail on the meadow: leave tree/sky band free at the top,
+     and a little room for foreground bushes at the bottom. */
+  position: absolute;
+  top: 17%;
+  right: 2%;
+  bottom: 5%;
+  left: 2%;
+  z-index: 1;
+  display: grid;
+  place-items: stretch;
+}
+
+.near {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 88% 78% at 50% 52%, transparent 48%, rgba(12, 28, 16, 0.2) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 14%, transparent 84%, rgba(10, 24, 12, 0.14) 100%);
+}
+
+/* Soft sunlight sweep across the meadow. */
+.lightSweep {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 230, 0.1) 48%,
+    transparent 58%
+  );
+  animation: lightSweep 14s ease-in-out infinite;
+  mix-blend-mode: soft-light;
+}
+
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  top: -6%;
+  width: 9px;
+  height: 9px;
+  opacity: 0.9;
+  animation-name: fallDrift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+.petal {
+  border-radius: 70% 0 70% 0;
+  background: linear-gradient(135deg, #f8bbd0, #ec407a);
+  box-shadow: 0 1px 2px rgba(136, 14, 79, 0.25);
+}
+
+.leaf {
+  width: 11px;
+  height: 8px;
+  border-radius: 2px 70% 2px 70%;
+  background: linear-gradient(135deg, #ffb74d, #e65100);
+  box-shadow: 0 1px 2px rgba(110, 40, 0, 0.25);
+}
+
+.sparkles {
+  position: absolute;
+  inset: 22% 8% 38%;
+}
+
+.sparkles i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 230, 0.9);
+  box-shadow: 0 0 10px rgba(255, 250, 200, 0.85);
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.sparkles i:nth-child(1) { left: 12%; top: 22%; }
+.sparkles i:nth-child(2) { left: 34%; top: 58%; animation-delay: 0.4s; }
+.sparkles i:nth-child(3) { left: 52%; top: 18%; animation-delay: 0.9s; }
+.sparkles i:nth-child(4) { left: 68%; top: 46%; animation-delay: 1.2s; }
+.sparkles i:nth-child(5) { left: 82%; top: 28%; animation-delay: 1.6s; }
+.sparkles i:nth-child(6) { left: 24%; top: 74%; animation-delay: 2s; }
+
+.scene-forest,
+.scene-sakura,
+.scene-autumn {
+  /* theme hooks */
+}
+
+@keyframes fallDrift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 0.95; }
+  100% {
+    transform: translate3d(36px, 110vh, 0) rotate(340deg);
+    opacity: 0.12;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+
+@keyframes lightSweep {
+  0%, 100% { transform: translateX(-8%) rotate(0deg); opacity: 0.35; }
+  50% { transform: translateX(10%) rotate(2deg); opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightSweep,
+  .particle,
+  .sparkles i {
+    animation: none !important;
+  }
+
+  .particle {
+    display: none;
+  }
+}

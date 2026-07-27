@@ -1,19 +1,29 @@
 /**
- * Temporary branding placeholders. Swap values later without touching components.
+ * Premium grass-and-sand Finger Challenge look (playful before the scare).
  */
 export const brandConfig = {
-  primaryColour: '#2F6BFF',
-  accentColour: '#19C37D',
-  backgroundColour: '#F7F8FB',
+  primaryColour: '#7B5CFF',
+  secondaryColour: '#FFC107',
+  accentColour: '#3DDC84',
+  highlightColour: '#4FC3F7',
+  backgroundColour: '#E8F8FF',
   surfaceColour: '#FFFFFF',
-  textColour: '#1A1F36',
-  mutedTextColour: '#5B647A',
-  wallColour: '#E8ECF4',
-  pathColour: '#FFFFFF',
-  pathStrokeColour: '#D0D7E6',
-  startColour: '#19C37D',
-  finishColour: '#2F6BFF',
-  failureColour: '#FF3B4A',
+  textColour: '#24324A',
+  mutedTextColour: '#5E7190',
+  /** Lush grass outside the playable corridor. */
+  wallColour: '#4CAF50',
+  wallColourDark: '#388E3C',
+  wallColourLight: '#81C784',
+  /** Sandy path the finger travels along. */
+  pathColour: '#F6E7C8',
+  pathColourDark: '#E8D4A8',
+  pathStrokeColour: '#D9C49A',
+  startColour: '#FF7043',
+  finishColour: '#7B5CFF',
+  failureColour: '#FF2E4D',
+  trailColour: '#42A5F5',
+  playerColour: '#FF8A3D',
+  lifeColour: '#FF5252',
   logoPath: '/assets/branding/logo.svg',
   socialImagePath: '/assets/branding/og-image.jpg',
 } as const;

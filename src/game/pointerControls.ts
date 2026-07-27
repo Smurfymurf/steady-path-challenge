@@ -1,9 +1,9 @@
 import type { Point } from './collision';
 
 /**
- * Converts a pointer event into SVG viewBox coordinates using the SVG's
- * current screen CTM. Prefer this over getBoundingClientRect + naive scale
- * so high-DPI and preserveAspectRatio layouts stay accurate.
+ * Converts a client (screen) point into SVG user-space coordinates.
+ * Uses the screen CTM when available, with a preserveAspectRatio-aware
+ * bounding-box fallback for browsers/layouts where CTM is unreliable.
  */
 export function clientPointToSvgPoint(
   svg: SVGSVGElement,
@@ -11,15 +11,40 @@ export function clientPointToSvgPoint(
   clientY: number,
 ): Point | null {
   const ctm = svg.getScreenCTM();
-  if (!ctm) {
+  if (ctm) {
+    try {
+      const point = svg.createSVGPoint();
+      point.x = clientX;
+      point.y = clientY;
+      const transformed = point.matrixTransform(ctm.inverse());
+      if (Number.isFinite(transformed.x) && Number.isFinite(transformed.y)) {
+        return { x: transformed.x, y: transformed.y };
+      }
+    } catch {
+      // Fall through to bounding-box mapping.
+    }
+  }
+
+  const rect = svg.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
     return null;
   }
 
-  const point = svg.createSVGPoint();
-  point.x = clientX;
-  point.y = clientY;
-  const transformed = point.matrixTransform(ctm.inverse());
-  return { x: transformed.x, y: transformed.y };
+  const viewBox = svg.viewBox.baseVal;
+  const vbWidth = viewBox.width || 300;
+  const vbHeight = viewBox.height || 520;
+  const scale = Math.min(rect.width / vbWidth, rect.height / vbHeight);
+  if (scale <= 0) {
+    return null;
+  }
+
+  const offsetX = (rect.width - vbWidth * scale) / 2;
+  const offsetY = (rect.height - vbHeight * scale) / 2;
+
+  return {
+    x: (clientX - rect.left - offsetX) / scale,
+    y: (clientY - rect.top - offsetY) / scale,
+  };
 }
 
 export function tryCapturePointer(
@@ -41,7 +66,9 @@ export function tryReleasePointer(
 ): void {
   if ('releasePointerCapture' in element) {
     try {
-      element.releasePointerCapture(pointerId);
+      if (element.hasPointerCapture?.(pointerId)) {
+        element.releasePointerCapture(pointerId);
+      }
     } catch {
       // Ignore release errors when capture was never held.
     }

@@ -128,10 +128,10 @@ export function evaluatePointerSample(options: {
     };
   }
 
-  // * Progress should not move backwards in a large jump (lift / teleport).
+  // * Small backward wobble is normal; only fail on large reverse jumps.
   if (
     options.hasStarted
-    && closest.progress < options.previousProgress - options.maxProgressSkip
+    && closest.progress < options.previousProgress - options.maxProgressSkip * 1.5
   ) {
     return {
       ok: false,

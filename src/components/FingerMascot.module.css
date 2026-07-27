@@ -1,0 +1,56 @@
+.wrap {
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.hero {
+  width: min(62vw, 240px);
+}
+
+.title {
+  width: 100%;
+}
+
+.compact {
+  width: 96px;
+}
+
+.end {
+  width: min(82vw, 320px);
+}
+
+.end .finger {
+  max-height: min(34dvh, 280px);
+}
+
+.slideUp {
+  animation: none;
+}
+
+.finger {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(42dvh, 340px);
+  object-fit: contain;
+  background: transparent;
+  transform-origin: 50% 90%;
+  animation: wiggle 2.6s ease-in-out 0.8s infinite;
+  filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.5));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg) translateY(0); }
+  50% { transform: rotate(4deg) translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finger {
+    animation: none;
+  }
+}
