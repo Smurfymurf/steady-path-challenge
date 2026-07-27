@@ -5,7 +5,7 @@ import {
   type AssignedCampaign,
   type OfferAssignments,
   type OfferGeo,
-} from '../../src/config/offerTypes';
+} from './_lib/offerTypes';
 import { readAssignments, writeAssignments } from './_lib/assignments';
 import { json, requireAdmin, type Handler } from './_lib/http';
 import {

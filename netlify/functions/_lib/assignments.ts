@@ -9,7 +9,7 @@ import {
   WHEEL_SLOT_COUNT,
   type OfferAssignments,
   type OfferGeo,
-} from '../../src/config/offerTypes';
+} from './offerTypes';
 
 const STORE_NAME = 'finger-challenge';
 const KEY = 'offer-assignments';

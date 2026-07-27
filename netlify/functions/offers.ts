@@ -2,7 +2,7 @@ import {
   WHEEL_COLOURS,
   WHEEL_SLOT_COUNT,
   type OfferGeo,
-} from '../../src/config/offerTypes';
+} from './_lib/offerTypes';
 import { readAssignments } from './_lib/assignments';
 import { json, type Handler } from './_lib/http';
 
