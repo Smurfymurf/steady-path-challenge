@@ -1,8 +1,13 @@
 import { json, adminGate, type Handler } from './_lib/http';
-import { getCampaign, isMaxBountyConfigured } from './_lib/maxbounty';
+import {
+  getCampaign,
+  getTrackingLink,
+  isMaxBountyConfigured,
+} from './_lib/maxbounty';
 
 /**
- * GET /.netlify/functions/mb-campaign?id=12345
+ * GET /.netlify/functions/mb-campaign?id=12345&tracking=1
+ * Campaign detail (+ optional live tracking link preview).
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -21,8 +26,16 @@ export const handler: Handler = async (event) => {
     return json(400, { error: 'Missing campaign id' });
   }
 
+  const wantTracking = event.queryStringParameters?.tracking === '1'
+    || event.queryStringParameters?.tracking === 'true';
+
   try {
     const detail = await getCampaign(id);
+    let trackingUrl: string | undefined;
+    if (wantTracking) {
+      trackingUrl = await getTrackingLink(id);
+    }
+
     return json(200, {
       success: true,
       campaign: {
@@ -36,6 +49,7 @@ export const handler: Handler = async (event) => {
         allowedCountries: detail.allowed_countries ?? [],
         rate: detail.commission?.rate,
         rateType: detail.commission?.rate_type,
+        trackingUrl,
       },
     });
   } catch (error) {

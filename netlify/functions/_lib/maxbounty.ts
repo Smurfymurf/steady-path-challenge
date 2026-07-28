@@ -92,6 +92,25 @@ export interface MbListCampaign {
   highlight?: string;
 }
 
+export interface MbCampaignDetailPayload {
+  campaign_id: number;
+  details?: {
+    name?: string;
+    description?: string;
+    status?: string;
+    epc?: number;
+    affiliate_campaign_status?: string;
+    thumbnail?: string;
+    geo_filtering?: string;
+  };
+  allowed_countries?: string[];
+  commission?: {
+    rate?: number;
+    rate_type?: string;
+    default_rate?: string;
+  };
+}
+
 export async function listCampaigns(
   list: string = 'popular',
   page = 1,
@@ -104,24 +123,151 @@ export async function listCampaigns(
   return data.campaigns ?? [];
 }
 
-export async function getCampaign(campaignId: number): Promise<{
-  campaign_id: number;
-  details?: {
-    name?: string;
-    description?: string;
-    status?: string;
-    epc?: number;
-    affiliate_campaign_status?: string;
-    thumbnail?: string;
-  };
-  allowed_countries?: string[];
-  commission?: {
-    rate?: number;
-    rate_type?: string;
-    default_rate?: string;
-  };
-}> {
+export async function getCampaign(campaignId: number): Promise<MbCampaignDetailPayload> {
   return mbFetch(`/campaign/${campaignId}`);
+}
+
+/** Country codes that should match a wheel geo tab. */
+export function geoCountryCodes(geo: string): string[] {
+  switch (geo.toUpperCase()) {
+    case 'US':
+      return ['US', 'USA'];
+    case 'GB':
+    case 'UK':
+      return ['GB', 'UK'];
+    case 'AU':
+      return ['AU'];
+    case 'NZ':
+      return ['NZ'];
+    default:
+      return [geo.toUpperCase()];
+  }
+}
+
+export function campaignMatchesGeo(
+  allowedCountries: string[] | undefined,
+  geo: string,
+): boolean {
+  if (geo.toUpperCase() === 'FALLBACK' || geo.toUpperCase() === 'ALL') {
+    return true;
+  }
+  const countries = (allowedCountries ?? []).map((code) => code.toUpperCase());
+  if (countries.length === 0) {
+    // * Unknown / unrestricted — keep visible so admins can still pick it.
+    return true;
+  }
+  if (countries.includes('ALL') || countries.includes('WW') || countries.includes('GLOBAL')) {
+    return true;
+  }
+  const targets = geoCountryCodes(geo);
+  return targets.some((code) => countries.includes(code));
+}
+
+export function isAffiliateApproved(status: string | undefined): boolean {
+  if (!status) {
+    return false;
+  }
+  const normalised = status.trim().toLowerCase();
+  return normalised === 'approved' || normalised === 'active';
+}
+
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index]!);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, Math.max(1, items.length)) },
+    () => worker(),
+  );
+  await Promise.all(workers);
+  return results;
+}
+
+export interface EnrichedCampaign {
+  campaignId: number;
+  name: string;
+  defaultRate?: number;
+  status?: string;
+  rateType?: string;
+  thumbnail?: string;
+  affiliateStatus?: string;
+  allowedCountries: string[];
+  epc?: number;
+}
+
+/**
+ * List campaigns then hydrate details so we can filter by geo + approval.
+ */
+export async function listEnrichedCampaigns(options: {
+  list?: string;
+  page?: number;
+  limit?: number;
+  geo?: string;
+  approvedOnly?: boolean;
+}): Promise<{ campaigns: EnrichedCampaign[]; scanned: number }> {
+  const list = options.list ?? 'popular';
+  const page = options.page ?? 1;
+  const limit = Math.min(100, options.limit ?? 50);
+  const approvedOnly = options.approvedOnly !== false;
+  const geo = options.geo?.toUpperCase() || '';
+
+  const listed = await listCampaigns(list, page, limit);
+  const enriched = await mapPool(listed, 6, async (campaign) => {
+    try {
+      const detail = await getCampaign(campaign.campaign_id);
+      return {
+        campaignId: campaign.campaign_id,
+        name: detail.details?.name ?? campaign.name,
+        defaultRate: detail.commission?.rate ?? campaign.default_rate,
+        status: detail.details?.status ?? campaign.status,
+        rateType: detail.commission?.rate_type ?? campaign.rate_type,
+        thumbnail: detail.details?.thumbnail ?? campaign.thumbnail,
+        affiliateStatus: detail.details?.affiliate_campaign_status,
+        allowedCountries: detail.allowed_countries ?? [],
+        epc: detail.details?.epc,
+      } satisfies EnrichedCampaign;
+    } catch {
+      return {
+        campaignId: campaign.campaign_id,
+        name: campaign.name,
+        defaultRate: campaign.default_rate,
+        status: campaign.status,
+        rateType: campaign.rate_type,
+        thumbnail: campaign.thumbnail,
+        affiliateStatus: undefined,
+        allowedCountries: [],
+      } satisfies EnrichedCampaign;
+    }
+  });
+
+  const filtered = enriched.filter((campaign) => {
+    if (approvedOnly && !isAffiliateApproved(campaign.affiliateStatus)) {
+      // * List endpoint "Active" often means runnable without extra approval.
+      if ((campaign.affiliateStatus ?? '').trim() === '' && campaign.status?.toLowerCase() === 'active') {
+        // keep — Active with blank affiliate status
+      } else {
+        return false;
+      }
+    }
+    if (geo && geo !== 'FALLBACK' && geo !== 'ALL') {
+      return campaignMatchesGeo(campaign.allowedCountries, geo);
+    }
+    return true;
+  });
+
+  return { campaigns: filtered, scanned: listed.length };
 }
 
 export async function getTrackingLink(

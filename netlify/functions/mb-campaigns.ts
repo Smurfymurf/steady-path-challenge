@@ -1,9 +1,12 @@
 import { json, adminGate, type Handler } from './_lib/http';
-import { isMaxBountyConfigured, listCampaigns } from './_lib/maxbounty';
+import { isMaxBountyConfigured, listEnrichedCampaigns } from './_lib/maxbounty';
 
 /**
- * GET /.netlify/functions/mb-campaigns?list=popular&page=1
- * Admin-only catalog from MaxBounty.
+ * GET /.netlify/functions/mb-campaigns
+ * ?list=popular&page=1&limit=40&geo=US&approvedOnly=1
+ *
+ * Hydrates MaxBounty campaign details so the admin can filter by
+ * allowed countries + affiliate approval status.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -22,21 +25,27 @@ export const handler: Handler = async (event) => {
 
   try {
     const params = event.queryStringParameters ?? {};
-    const list = params.list ?? 'popular';
+    const list = params.list ?? 'recentlyApproved';
     const page = Number.parseInt(params.page ?? '1', 10) || 1;
-    const limit = Math.min(100, Number.parseInt(params.limit ?? '50', 10) || 50);
-    const campaigns = await listCampaigns(list, page, limit);
+    const limit = Math.min(60, Number.parseInt(params.limit ?? '40', 10) || 40);
+    const geo = (params.geo ?? '').toUpperCase();
+    const approvedOnly = params.approvedOnly !== '0' && params.approvedOnly !== 'false';
+
+    const { campaigns, scanned } = await listEnrichedCampaigns({
+      list,
+      page,
+      limit,
+      geo: geo || undefined,
+      approvedOnly,
+    });
+
     return json(200, {
       success: true,
       list,
-      campaigns: campaigns.map((c) => ({
-        campaignId: c.campaign_id,
-        name: c.name,
-        defaultRate: c.default_rate,
-        status: c.status,
-        rateType: c.rate_type,
-        thumbnail: c.thumbnail,
-      })),
+      geo: geo || null,
+      approvedOnly,
+      scanned,
+      campaigns,
     });
   } catch (error) {
     return json(502, {

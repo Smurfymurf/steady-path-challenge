@@ -55,6 +55,10 @@ export interface MbCampaignSummary {
   status?: string;
   rateType?: string;
   thumbnail?: string;
+  affiliateStatus?: string;
+  allowedCountries?: string[];
+  epc?: number;
+  trackingUrl?: string;
 }
 
 export interface MbCampaignDetail extends MbCampaignSummary {

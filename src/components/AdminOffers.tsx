@@ -18,6 +18,7 @@ const SESSION_KEY = 'fc-admin-token';
 const API = {
   offers: '/api/admin-offers',
   campaigns: '/api/mb-campaigns',
+  campaign: '/api/mb-campaign',
 } as const;
 
 interface AdminOffersProps {
@@ -40,7 +41,7 @@ function applyAssignments(
 }
 
 function authMessage(status: number, data: { error?: string; hint?: string; code?: string }): string {
-  if (data.code === 'admin_not_configured' || status === 503 && data.error?.includes('ADMIN_PASSWORD')) {
+  if (data.code === 'admin_not_configured' || (status === 503 && data.error?.includes('ADMIN_PASSWORD'))) {
     return data.hint
       ?? 'ADMIN_PASSWORD is not set on Netlify. Add it under Site settings → Environment variables, then redeploy.';
   }
@@ -50,11 +51,32 @@ function authMessage(status: number, data: { error?: string; hint?: string; code
   return data.error ?? data.hint ?? 'Request failed';
 }
 
+function formatCountries(countries: string[] | undefined): string {
+  if (!countries || countries.length === 0) {
+    return 'countries unknown';
+  }
+  if (countries.length > 8) {
+    return `${countries.slice(0, 8).join(', ')} +${countries.length - 8}`;
+  }
+  return countries.join(', ');
+}
+
+async function copyText(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function AdminOffers({ onExit }: AdminOffersProps) {
   const [password, setPassword] = useState('');
   const [token, setToken] = useState(() => sessionStorage.getItem(SESSION_KEY) ?? '');
   const [activeGeo, setActiveGeo] = useState<OfferGeo>('US');
-  const [listType, setListType] = useState('popular');
+  const [listType, setListType] = useState('recentlyApproved');
+  const [matchActiveGeo, setMatchActiveGeo] = useState(true);
+  const [approvedOnly, setApprovedOnly] = useState(true);
   const [campaigns, setCampaigns] = useState<MbCampaignSummary[]>([]);
   const [assignments, setAssignments] = useState<OfferAssignments | null>(null);
   const [draft, setDraft] = useState<Record<OfferGeo, AssignedCampaign[]>>({
@@ -68,6 +90,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   const [busy, setBusy] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [bootstrapping, setBootstrapping] = useState(() => Boolean(sessionStorage.getItem(SESSION_KEY)));
+  const [addingId, setAddingId] = useState<number | null>(null);
 
   const clearSession = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
@@ -75,13 +98,28 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     setBootstrapping(false);
   }, []);
 
-  const loadCampaigns = useCallback(async (authToken: string, list: string) => {
-    const response = await fetch(
-      `${API.campaigns}?list=${encodeURIComponent(list)}&limit=50`,
-      { headers: { Authorization: `Bearer ${authToken}` } },
-    );
+  const loadCampaigns = useCallback(async (
+    authToken: string,
+    list: string,
+    geo: OfferGeo,
+    matchGeo: boolean,
+    onlyApproved: boolean,
+  ) => {
+    const params = new URLSearchParams({
+      list,
+      limit: '40',
+      approvedOnly: onlyApproved ? '1' : '0',
+    });
+    if (matchGeo && geo !== 'FALLBACK') {
+      params.set('geo', geo);
+    }
+
+    const response = await fetch(`${API.campaigns}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
     const data = (await response.json()) as {
       campaigns?: MbCampaignSummary[];
+      scanned?: number;
       error?: string;
       hint?: string;
       code?: string;
@@ -94,7 +132,11 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       throw new Error(authMessage(response.status, data));
     }
     setCampaigns(data.campaigns ?? []);
-    return (data.campaigns ?? []).length;
+    const nextScanned = data.scanned ?? (data.campaigns ?? []).length;
+    return {
+      campaigns: data.campaigns ?? [],
+      scanned: nextScanned,
+    };
   }, [clearSession]);
 
   const loadAssignments = useCallback(async (authToken: string) => {
@@ -122,7 +164,6 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     }
   }, [clearSession]);
 
-  // * Restore an existing session only after the server confirms the password.
   useEffect(() => {
     if (!token) {
       setBootstrapping(false);
@@ -138,9 +179,20 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
         if (cancelled) {
           return;
         }
-        const count = await loadCampaigns(token, listType);
+        const loaded = await loadCampaigns(
+          token,
+          listType,
+          activeGeo,
+          matchActiveGeo,
+          approvedOnly,
+        );
         if (!cancelled) {
-          setStatus(`Loaded ${count} campaigns (${listType}).`);
+          const geoNote = matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · ${activeGeo}` : '';
+          const approvedNote = approvedOnly ? ' · approved' : '';
+          setStatus(
+            `Showing ${loaded.campaigns.length} of ${loaded.scanned} scanned`
+            + ` (${listType}${geoNote}${approvedNote}).`,
+          );
         }
       } catch (error: unknown) {
         if (!cancelled) {
@@ -156,7 +208,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     return () => {
       cancelled = true;
     };
-    // * Intentionally omit listType — catalog refresh is manual / after login.
+    // * Boot once per login; later refreshes are explicit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, loadAssignments, loadCampaigns]);
 
@@ -211,10 +263,21 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       return;
     }
     setBusy(true);
-    setStatus('Loading MaxBounty campaigns…');
+    setStatus('Filtering MaxBounty catalog…');
     try {
-      const count = await loadCampaigns(token, listType);
-      setStatus(`Loaded ${count} campaigns (${listType}).`);
+      const loaded = await loadCampaigns(
+        token,
+        listType,
+        activeGeo,
+        matchActiveGeo,
+        approvedOnly,
+      );
+      setStatus(
+        `Showing ${loaded.campaigns.length} offers`
+        + ` (scanned ${loaded.scanned} from “${listType}”)`
+        + `${matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · geo ${activeGeo}` : ' · all geos'}`
+        + `${approvedOnly ? ' · approved to run' : ''}.`,
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Campaign fetch failed');
     } finally {
@@ -222,30 +285,69 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     }
   };
 
-  const addCampaign = (campaign: MbCampaignSummary) => {
-    setDraft((prev) => {
-      const current = prev[activeGeo];
-      if (current.some((item) => item.campaignId === campaign.campaignId)) {
-        return prev;
+  const addCampaign = async (campaign: MbCampaignSummary) => {
+    if (!token) {
+      return;
+    }
+    const current = draft[activeGeo];
+    if (current.some((item) => item.campaignId === campaign.campaignId)) {
+      setStatus(`#${campaign.campaignId} is already on the ${activeGeo} wheel.`);
+      return;
+    }
+    if (current.length >= WHEEL_SLOT_COUNT) {
+      setStatus(`Max ${WHEEL_SLOT_COUNT} offers per geo.`);
+      return;
+    }
+
+    setAddingId(campaign.campaignId);
+    setStatus(`Fetching tracking link for #${campaign.campaignId}…`);
+    try {
+      const response = await fetch(
+        `${API.campaign}?id=${campaign.campaignId}&tracking=1`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = (await response.json()) as {
+        campaign?: MbCampaignSummary & {
+          rate?: number;
+          trackingUrl?: string;
+        };
+        error?: string;
+        hint?: string;
+        code?: string;
+      };
+      if (response.status === 401 || data.code === 'admin_not_configured') {
+        clearSession();
+        throw new Error(authMessage(response.status, data));
       }
-      if (current.length >= WHEEL_SLOT_COUNT) {
-        setStatus(`Max ${WHEEL_SLOT_COUNT} offers per geo.`);
-        return prev;
+      if (!response.ok || !data.campaign) {
+        throw new Error(authMessage(response.status, data));
       }
-      return {
+
+      const detail = data.campaign;
+      setDraft((prev) => ({
         ...prev,
         [activeGeo]: [
-          ...current,
+          ...prev[activeGeo],
           {
-            campaignId: campaign.campaignId,
-            name: campaign.name,
-            trackingUrl: '',
-            rate: campaign.defaultRate,
-            rateType: campaign.rateType,
+            campaignId: detail.campaignId,
+            name: detail.name,
+            trackingUrl: detail.trackingUrl ?? '',
+            rate: detail.rate ?? detail.defaultRate,
+            rateType: detail.rateType,
+            allowedCountries: detail.allowedCountries,
           },
         ],
-      };
-    });
+      }));
+      setStatus(
+        detail.trackingUrl
+          ? `Added #${detail.campaignId} to ${activeGeo} with tracking link ready. Save to persist.`
+          : `Added #${detail.campaignId} to ${activeGeo}. Tracking link missing — try Save.`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Could not add campaign');
+    } finally {
+      setAddingId(null);
+    }
   };
 
   const removeCampaign = (campaignId: number) => {
@@ -268,6 +370,46 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       list[nextIndex] = swap;
       return { ...prev, [activeGeo]: list };
     });
+  };
+
+  const refreshTracking = async (campaignId: number) => {
+    if (!token) {
+      return;
+    }
+    setBusy(true);
+    setStatus(`Refreshing tracking link for #${campaignId}…`);
+    try {
+      const response = await fetch(
+        `${API.campaign}?id=${campaignId}&tracking=1`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = (await response.json()) as {
+        campaign?: { trackingUrl?: string; name?: string; allowedCountries?: string[] };
+        error?: string;
+        code?: string;
+        hint?: string;
+      };
+      if (!response.ok || !data.campaign?.trackingUrl) {
+        throw new Error(authMessage(response.status, data));
+      }
+      setDraft((prev) => ({
+        ...prev,
+        [activeGeo]: prev[activeGeo].map((entry) => (
+          entry.campaignId === campaignId
+            ? {
+                ...entry,
+                trackingUrl: data.campaign!.trackingUrl!,
+                allowedCountries: data.campaign!.allowedCountries ?? entry.allowedCountries,
+              }
+            : entry
+        )),
+      }));
+      setStatus(`Tracking link refreshed for #${campaignId}. Save to persist.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Tracking refresh failed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const save = async () => {
@@ -311,7 +453,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       if (data.assignments) {
         applyAssignments(data.assignments, setAssignments, setDraft);
       }
-      setStatus('Saved. Tracking links refreshed for all geos.');
+      setStatus('Saved. Tracking links refreshed for all geos — check the preview under each offer.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Save failed');
     } finally {
@@ -361,8 +503,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
         <div>
           <h1>MaxBounty Offers</h1>
           <p>
-            Pick up to {WHEEL_SLOT_COUNT} campaigns per geo. FALLBACK is used when a
-            country has no slots.
+            Filter the catalog by geo + approved-to-run, then add up to {WHEEL_SLOT_COUNT}
+            {' '}campaigns per country. Tracking links are generated from MaxBounty when you add
+            or save.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -388,7 +531,24 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
             key={geo}
             type="button"
             className={activeGeo === geo ? styles.tabActive : styles.tab}
-            onClick={() => setActiveGeo(geo)}
+            onClick={() => {
+              setActiveGeo(geo);
+              if (token && matchActiveGeo) {
+                setBusy(true);
+                void loadCampaigns(token, listType, geo, true, approvedOnly)
+                  .then((loaded) => {
+                    setStatus(
+                      `Showing ${loaded.campaigns.length} offers for ${geo}`
+                      + ` (scanned ${loaded.scanned} from “${listType}”)`
+                      + `${approvedOnly ? ' · approved to run' : ''}.`,
+                    );
+                  })
+                  .catch((error: unknown) => {
+                    setStatus(error instanceof Error ? error.message : 'Campaign fetch failed');
+                  })
+                  .finally(() => setBusy(false));
+              }
+            }}
           >
             {geo}
             <span>{draft[geo].length}/{WHEEL_SLOT_COUNT}</span>
@@ -404,6 +564,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
               value={listType}
               onChange={(event) => setListType(event.target.value)}
             >
+              <option value="recentlyApproved">recentlyApproved</option>
               <option value="popular">popular</option>
               <option value="top">top</option>
               <option value="trending">trending</option>
@@ -413,22 +574,60 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
               <option value="new">new</option>
             </select>
             <button type="button" onClick={() => void refreshCampaigns()} disabled={busy}>
-              Refresh
+              {busy ? 'Loading…' : 'Apply filters'}
             </button>
           </div>
+
+          <div className={styles.filters}>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={matchActiveGeo}
+                onChange={(event) => setMatchActiveGeo(event.target.checked)}
+              />
+              Match active geo ({activeGeo === 'FALLBACK' ? 'all countries' : activeGeo})
+            </label>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={approvedOnly}
+                onChange={(event) => setApprovedOnly(event.target.checked)}
+              />
+              Approved to run only
+            </label>
+          </div>
+
           <ul className={styles.list}>
+            {campaigns.length === 0 && (
+              <li className={styles.empty}>
+                No campaigns match these filters. Try another list or turn off a filter, then Apply.
+              </li>
+            )}
             {campaigns.map((campaign) => (
-              <li key={campaign.campaignId}>
-                <div>
+              <li key={campaign.campaignId} className={styles.catalogItem}>
+                <div className={styles.selectedMeta}>
                   <strong>{campaign.name}</strong>
                   <small>
                     #{campaign.campaignId}
                     {campaign.defaultRate != null ? ` · ${campaign.defaultRate}` : ''}
                     {campaign.rateType ? ` ${campaign.rateType}` : ''}
+                    {campaign.epc != null ? ` · EPC ${campaign.epc}` : ''}
                   </small>
+                  <div className={styles.badges}>
+                    <span className={styles.badge}>
+                      {campaign.affiliateStatus || campaign.status || 'status ?'}
+                    </span>
+                    <span className={styles.badgeMuted}>
+                      {formatCountries(campaign.allowedCountries)}
+                    </span>
+                  </div>
                 </div>
-                <button type="button" onClick={() => addCampaign(campaign)}>
-                  Add to {activeGeo}
+                <button
+                  type="button"
+                  onClick={() => void addCampaign(campaign)}
+                  disabled={addingId === campaign.campaignId || busy}
+                >
+                  {addingId === campaign.campaignId ? 'Linking…' : `Add to ${activeGeo}`}
                 </button>
               </li>
             ))}
@@ -452,7 +651,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
                   <strong>{item.name}</strong>
                   <small>
                     #{item.campaignId}
-                    {item.trackingUrl ? ' · link ready' : ' · link on save'}
+                    {item.allowedCountries?.length
+                      ? ` · ${formatCountries(item.allowedCountries)}`
+                      : ''}
                   </small>
                   <label className={styles.labelField}>
                     Wheel name
@@ -473,6 +674,50 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
                       }}
                     />
                   </label>
+                  <div className={styles.linkPreview}>
+                    <span className={styles.linkLabel}>
+                      {item.trackingUrl ? 'Tracking link' : 'Tracking link missing'}
+                    </span>
+                    {item.trackingUrl ? (
+                      <a
+                        className={styles.linkUrl}
+                        href={item.trackingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={item.trackingUrl}
+                      >
+                        {item.trackingUrl}
+                      </a>
+                    ) : (
+                      <span className={styles.linkMissing}>
+                        Add fetched a blank link — use Refresh link or Save.
+                      </span>
+                    )}
+                    <div className={styles.linkActions}>
+                      <button
+                        type="button"
+                        className={styles.ghost}
+                        disabled={!item.trackingUrl}
+                        onClick={() => {
+                          void copyText(item.trackingUrl).then((ok) => {
+                            setStatus(ok
+                              ? `Copied tracking link for #${item.campaignId}.`
+                              : 'Could not copy link.');
+                          });
+                        }}
+                      >
+                        Copy
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.ghost}
+                        disabled={busy}
+                        onClick={() => void refreshTracking(item.campaignId)}
+                      >
+                        Refresh link
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div className={styles.rowActions}>
                   <button type="button" onClick={() => moveCampaign(item.campaignId, -1)}>
