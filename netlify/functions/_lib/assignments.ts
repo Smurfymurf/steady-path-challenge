@@ -63,7 +63,6 @@ function getOfferStore(event?: HandlerEvent): { store: Store | null; error?: str
     return {
       store: getStore({
         name: STORE_NAME,
-        consistency: 'strong',
       }),
     };
   } catch (autoError) {
@@ -81,7 +80,6 @@ function getOfferStore(event?: HandlerEvent): { store: Store | null; error?: str
             name: STORE_NAME,
             siteID,
             token,
-            consistency: 'strong',
           }),
         };
       } catch (manualError) {
