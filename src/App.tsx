@@ -8,7 +8,7 @@ import { gameConfig, type GameState } from './config/game';
 import { getLevel, hasNextLevel } from './config/levels';
 import { getWheelForGeo, type OfferGeo, type WheelConfig } from './config/offers';
 import { detectVisitorGeo } from './game/geo';
-import { fetchWheelForGeo } from './game/liveOffers';
+import { fetchWheelForGeo, type LiveWheelConfig } from './game/liveOffers';
 import {
   finaleTitle,
   sumLevelScores,
@@ -74,7 +74,9 @@ export default function App() {
 
   const [session, setSession] = useState<SessionState | null>(null);
   const [wheel, setWheel] = useState<WheelConfig>(() => getWheelForGeo('FALLBACK'));
+  const [wheelSource, setWheelSource] = useState<LiveWheelConfig['source']>('placeholder');
   const [offerGeo, setOfferGeo] = useState<OfferGeo>('FALLBACK');
+  const [countryCode, setCountryCode] = useState<string | null>(null);
   const [pendingScore, setPendingScore] = useState<LevelScoreResult | null>(null);
   const sessionRef = useRef<SessionState | null>(null);
   const demoBootstrapped = useRef(false);
@@ -87,6 +89,7 @@ export default function App() {
   const refreshWheel = useCallback(async (geo: OfferGeo) => {
     const liveWheel = await fetchWheelForGeo(geo);
     setWheel(liveWheel);
+    setWheelSource(liveWheel.source);
     return liveWheel;
   }, []);
 
@@ -97,9 +100,11 @@ export default function App() {
         return;
       }
       setOfferGeo(result.offerGeo);
+      setCountryCode(result.countryCode);
       const liveWheel = await fetchWheelForGeo(result.offerGeo);
       if (!cancelled) {
         setWheel(liveWheel);
+        setWheelSource(liveWheel.source);
       }
     });
     return () => {
@@ -281,6 +286,8 @@ export default function App() {
       {gameState === 'spinWheel' && (
         <SpinWheel
           wheel={wheel}
+          countryCode={countryCode}
+          wheelSource={wheelSource}
           onClose={() => {
             playSfx('tap');
             setGameState('gameOver');

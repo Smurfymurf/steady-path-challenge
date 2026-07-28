@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WheelConfig } from '../config/offers';
 import { playSfx } from '../game/sound';
+import { notifyWheelSpin } from '../game/spinNotify';
 import { MenuBackdrop } from './MenuBackdrop';
 import styles from './SpinWheel.module.css';
 
 interface SpinWheelProps {
   wheel: WheelConfig;
+  countryCode?: string | null;
+  wheelSource?: string;
   onClose: () => void;
 }
 
-export function SpinWheel({ wheel, onClose }: SpinWheelProps) {
+export function SpinWheel({
+  wheel,
+  countryCode = null,
+  wheelSource = 'unknown',
+  onClose,
+}: SpinWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [resultIndex, setResultIndex] = useState<number | null>(null);
@@ -72,6 +80,18 @@ export function SpinWheel({ wheel, onClose }: SpinWheelProps) {
       setSpinning(false);
       setResultIndex(index);
       playSfx('win');
+
+      const landed = wheel.offers[index];
+      if (landed) {
+        notifyWheelSpin({
+          geo: wheel.geo,
+          countryCode,
+          offerLabel: landed.label,
+          offerId: landed.id,
+          campaignId: landed.campaignId ?? null,
+          source: wheelSource,
+        });
+      }
     }, 4200);
   };
 
