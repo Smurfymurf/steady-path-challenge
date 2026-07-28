@@ -68,6 +68,17 @@ export const wheelsByGeo: Record<OfferGeo, WheelConfig> = {
 
 const targetedGeos: OfferGeo[] = ['US', 'GB', 'AU', 'NZ'];
 
+/** Prize wheel is only offered to US + UK visitors for now. */
+export const PRIZE_WHEEL_GEOS: OfferGeo[] = ['US', 'GB'];
+
+export function isPrizeWheelGeo(geo: OfferGeo | string | null | undefined): boolean {
+  if (!geo) {
+    return false;
+  }
+  const normalised = geo.toUpperCase() === 'UK' ? 'GB' : geo.toUpperCase();
+  return PRIZE_WHEEL_GEOS.includes(normalised as OfferGeo);
+}
+
 export function resolveOfferGeo(countryCode: string | null): OfferGeo {
   if (!countryCode) {
     return 'FALLBACK';

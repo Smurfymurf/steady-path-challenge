@@ -6,7 +6,7 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { SpinWheel } from './components/SpinWheel';
 import { gameConfig, type GameState } from './config/game';
 import { getLevel, hasNextLevel } from './config/levels';
-import { getWheelForGeo, type OfferGeo, type WheelConfig } from './config/offers';
+import { getWheelForGeo, isPrizeWheelGeo, type OfferGeo, type WheelConfig } from './config/offers';
 import { detectVisitorGeo } from './game/geo';
 import { fetchWheelForGeo, type LiveWheelConfig } from './game/liveOffers';
 import {
@@ -227,6 +227,7 @@ export default function App() {
   }, [updateSession]);
 
   const grandTotal = session ? sumLevelScores(session.levelScores) : 0;
+  const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
 
   return (
     <div className="app-shell">
@@ -273,7 +274,11 @@ export default function App() {
       {gameState === 'gameOver' && session && (
         <GameOverScreen
           furthestLevel={session.furthestLevel}
+          showPrizeWheel={showPrizeWheel}
           onSpin={() => {
+            if (!showPrizeWheel) {
+              return;
+            }
             playSfx('tap');
             void refreshWheel(offerGeo).finally(() => {
               setGameState('spinWheel');
@@ -283,7 +288,7 @@ export default function App() {
         />
       )}
 
-      {gameState === 'spinWheel' && (
+      {gameState === 'spinWheel' && showPrizeWheel && (
         <SpinWheel
           wheel={wheel}
           countryCode={countryCode}

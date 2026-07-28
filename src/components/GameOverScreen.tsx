@@ -14,12 +14,14 @@ import styles from './GameOverScreen.module.css';
 
 interface GameOverScreenProps {
   furthestLevel: number;
+  showPrizeWheel?: boolean;
   onSpin: () => void;
   onRestart: () => void;
 }
 
 export function GameOverScreen({
   furthestLevel,
+  showPrizeWheel = false,
   onSpin,
   onRestart,
 }: GameOverScreenProps) {
@@ -50,20 +52,23 @@ export function GameOverScreen({
           <p className={styles.eyebrow}>{gameConfig.outOfLivesMessage}</p>
           <h1 className={styles.title}>So close!</h1>
           <p className={styles.body}>
-            You reached Level {furthestLevel}. Don’t leave empty-handed —
-            spin for a mystery prize, then dare a friend.
+            {showPrizeWheel
+              ? `You reached Level ${furthestLevel}. Don’t leave empty-handed — spin for a mystery prize, then dare a friend.`
+              : `You reached Level ${furthestLevel}. Challenge a friend and see if they can beat your run.`}
           </p>
 
-          <button
-            type="button"
-            className={styles.primary}
-            onClick={() => {
-              playSfx('go');
-              onSpin();
-            }}
-          >
-            Spin to win a prize
-          </button>
+          {showPrizeWheel && (
+            <button
+              type="button"
+              className={styles.primary}
+              onClick={() => {
+                playSfx('go');
+                onSpin();
+              }}
+            >
+              Spin to win a prize
+            </button>
+          )}
 
           <div className={styles.shareBlock}>
             <button type="button" className={styles.secondary} onClick={handleShare}>
