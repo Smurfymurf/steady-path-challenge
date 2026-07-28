@@ -91,6 +91,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   const [status, setStatus] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [storageBackend, setStorageBackend] = useState<'blobs' | 'memory' | 'unknown'>('unknown');
   const [bootstrapping, setBootstrapping] = useState(() => Boolean(sessionStorage.getItem(SESSION_KEY)));
   const [addingId, setAddingId] = useState<number | null>(null);
 
@@ -155,6 +156,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     const data = (await response.json()) as {
       success?: boolean;
       configured?: boolean;
+      storage?: 'blobs' | 'memory';
       assignments?: OfferAssignments;
       error?: string;
       hint?: string;
@@ -168,6 +170,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       throw new Error(authMessage(response.status, data));
     }
     setConfigured(Boolean(data.configured));
+    if (data.storage) {
+      setStorageBackend(data.storage);
+    }
     if (data.assignments) {
       applyAssignments(data.assignments, setAssignments, setDraft);
     }
@@ -237,6 +242,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       });
       const data = (await response.json()) as {
         configured?: boolean;
+        storage?: 'blobs' | 'memory';
         assignments?: OfferAssignments;
         error?: string;
         hint?: string;
@@ -250,6 +256,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
 
       sessionStorage.setItem(SESSION_KEY, candidate);
       setConfigured(Boolean(data.configured));
+      if (data.storage) {
+        setStorageBackend(data.storage);
+      }
       if (data.assignments) {
         applyAssignments(data.assignments, setAssignments, setDraft);
       }
@@ -482,18 +491,29 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
         error?: string;
         hint?: string;
         code?: string;
+        storage?: 'blobs' | 'memory';
+        persisted?: boolean;
       };
       if (response.status === 401 || data.code === 'admin_not_configured') {
         clearSession();
         throw new Error(authMessage(response.status, data));
       }
+      if (data.storage) {
+        setStorageBackend(data.storage);
+      }
       if (!response.ok) {
-        throw new Error(authMessage(response.status, data));
+        throw new Error(
+          data.hint
+            ? `${data.error ?? 'Save failed'} — ${data.hint}`
+            : authMessage(response.status, data),
+        );
       }
       if (data.assignments) {
         applyAssignments(data.assignments, setAssignments, setDraft);
       }
-      setStatus('Saved. Tracking links refreshed for all geos — check the preview under each offer.');
+      setStatus(
+        'Saved to Netlify Blobs. Tracking links are live — open the game (or refresh) and spin to verify.',
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Save failed');
     } finally {
@@ -565,6 +585,19 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
         </p>
       )}
 
+      {storageBackend === 'memory' && (
+        <p className={styles.warn}>
+          Storage is in-memory only — saves will not reach the live game. Netlify Blobs
+          must be available to Functions. Redeploy the site from Netlify/Git so Blobs
+          context is attached, then Save again.
+        </p>
+      )}
+
+      <p className={styles.meta}>
+        Tip: assign offers for your country tab <strong>and</strong> FALLBACK. The game
+        uses your visitor geo, then FALLBACK if that geo is empty.
+        {storageBackend !== 'unknown' ? ` · storage: ${storageBackend}` : ''}
+      </p>
       <div className={styles.tabs}>
         {OFFER_GEOS.map((geo) => (
           <button

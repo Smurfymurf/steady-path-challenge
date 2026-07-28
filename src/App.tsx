@@ -6,7 +6,7 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { SpinWheel } from './components/SpinWheel';
 import { gameConfig, type GameState } from './config/game';
 import { getLevel, hasNextLevel } from './config/levels';
-import { getWheelForGeo, type WheelConfig } from './config/offers';
+import { getWheelForGeo, type OfferGeo, type WheelConfig } from './config/offers';
 import { detectVisitorGeo } from './game/geo';
 import { fetchWheelForGeo } from './game/liveOffers';
 import {
@@ -74,6 +74,7 @@ export default function App() {
 
   const [session, setSession] = useState<SessionState | null>(null);
   const [wheel, setWheel] = useState<WheelConfig>(() => getWheelForGeo('FALLBACK'));
+  const [offerGeo, setOfferGeo] = useState<OfferGeo>('FALLBACK');
   const [pendingScore, setPendingScore] = useState<LevelScoreResult | null>(null);
   const sessionRef = useRef<SessionState | null>(null);
   const demoBootstrapped = useRef(false);
@@ -83,12 +84,19 @@ export default function App() {
     setSession(next);
   }, []);
 
+  const refreshWheel = useCallback(async (geo: OfferGeo) => {
+    const liveWheel = await fetchWheelForGeo(geo);
+    setWheel(liveWheel);
+    return liveWheel;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     detectVisitorGeo().then(async (result) => {
       if (cancelled) {
         return;
       }
+      setOfferGeo(result.offerGeo);
       const liveWheel = await fetchWheelForGeo(result.offerGeo);
       if (!cancelled) {
         setWheel(liveWheel);
@@ -262,7 +270,9 @@ export default function App() {
           furthestLevel={session.furthestLevel}
           onSpin={() => {
             playSfx('tap');
-            setGameState('spinWheel');
+            void refreshWheel(offerGeo).finally(() => {
+              setGameState('spinWheel');
+            });
           }}
           onRestart={handleRestartFromGameOver}
         />

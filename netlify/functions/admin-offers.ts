@@ -4,13 +4,16 @@ import {
   getTrackingLink,
   isMaxBountyConfigured,
 } from './_lib/maxbounty';
-import { readAssignments, writeAssignments } from './_lib/assignments';
+import {
+  countAssignedSlots,
+  readAssignments,
+  writeAssignments,
+} from './_lib/assignments';
 import {
   emptyAssignments,
   OFFER_GEOS,
   WHEEL_SLOT_COUNT,
   type AssignedCampaign,
-  type OfferAssignments,
   type OfferGeo,
 } from './_lib/offerTypes';
 
@@ -25,10 +28,12 @@ export const handler: Handler = async (event) => {
   }
 
   if (event.httpMethod === 'GET') {
-    const assignments = await readAssignments();
+    const { assignments, storage } = await readAssignments();
     return json(200, {
       success: true,
       configured: isMaxBountyConfigured(),
+      storage,
+      slotCount: countAssignedSlots(assignments),
       assignments,
     });
   }
@@ -71,7 +76,23 @@ export const handler: Handler = async (event) => {
       }
 
       const saved = await writeAssignments(next);
-      return json(200, { success: true, assignments: saved });
+      if (!saved.persisted) {
+        return json(503, {
+          error: 'Offers could not be saved to Netlify Blobs — the game will not see them.',
+          code: 'storage_unavailable',
+          hint: 'Redeploy via Netlify (not a static-only upload) so Functions have Blobs access. Check Site settings → Blobs.',
+          storage: saved.storage,
+          assignments: saved.assignments,
+        });
+      }
+
+      return json(200, {
+        success: true,
+        storage: saved.storage,
+        persisted: true,
+        slotCount: countAssignedSlots(saved.assignments),
+        assignments: saved.assignments,
+      });
     } catch (error) {
       return json(502, {
         error: error instanceof Error ? error.message : 'Failed to save offers',
