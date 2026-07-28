@@ -1,8 +1,13 @@
 /**
- * Persist offer assignments in Netlify Blobs (prod) with an in-memory fallback for local.
+ * Persist offer assignments in Netlify Blobs.
+ *
+ * Classic Functions (export const handler) run in Lambda compatibility mode,
+ * so Blobs needs connectLambda(event) before getStore() — otherwise saves
+ * silently fail and the game never sees admin offers.
  */
 
-import { getStore, type Store } from '@netlify/blobs';
+import { connectLambda, getStore, type Store } from '@netlify/blobs';
+import type { HandlerEvent } from '@netlify/functions';
 import {
   emptyAssignments,
   OFFER_GEOS,
@@ -21,22 +26,11 @@ export type AssignmentStorage = 'blobs' | 'memory';
 export interface AssignmentReadResult {
   assignments: OfferAssignments;
   storage: AssignmentStorage;
+  error?: string;
 }
 
 export interface AssignmentWriteResult extends AssignmentReadResult {
   persisted: boolean;
-}
-
-function getOfferStore(): Store | null {
-  try {
-    return getStore({
-      name: STORE_NAME,
-      consistency: 'strong',
-    });
-  } catch (error) {
-    console.error('[assignments] Netlify Blobs unavailable:', error);
-    return null;
-  }
 }
 
 function normaliseAssignments(raw: OfferAssignments): OfferAssignments {
@@ -52,8 +46,64 @@ function normaliseAssignments(raw: OfferAssignments): OfferAssignments {
   };
 }
 
-export async function readAssignments(): Promise<AssignmentReadResult> {
-  const store = getOfferStore();
+/**
+ * Open the site Blobs store. Pass the Lambda event so connectLambda can
+ * attach Netlify's automatic Blobs credentials for Functions v1.
+ */
+function getOfferStore(event?: HandlerEvent): { store: Store | null; error?: string } {
+  if (event) {
+    try {
+      connectLambda(event);
+    } catch (error) {
+      console.error('[assignments] connectLambda failed:', error);
+    }
+  }
+
+  try {
+    return {
+      store: getStore({
+        name: STORE_NAME,
+        consistency: 'strong',
+      }),
+    };
+  } catch (autoError) {
+    const siteID = process.env.SITE_ID
+      || process.env.NETLIFY_SITE_ID
+      || process.env.BLOBS_SITE_ID;
+    const token = process.env.NETLIFY_BLOBS_TOKEN
+      || process.env.BLOBS_TOKEN
+      || process.env.NETLIFY_AUTH_TOKEN;
+
+    if (siteID && token) {
+      try {
+        return {
+          store: getStore({
+            name: STORE_NAME,
+            siteID,
+            token,
+            consistency: 'strong',
+          }),
+        };
+      } catch (manualError) {
+        const message = manualError instanceof Error ? manualError.message : String(manualError);
+        console.error('[assignments] Manual Blobs config failed:', manualError);
+        return { store: null, error: message };
+      }
+    }
+
+    const message = autoError instanceof Error ? autoError.message : String(autoError);
+    console.error('[assignments] Netlify Blobs unavailable:', autoError);
+    return {
+      store: null,
+      error: `${message} (set BLOBS_SITE_ID + NETLIFY_BLOBS_TOKEN if this keeps failing)`,
+    };
+  }
+}
+
+export async function readAssignments(
+  event?: HandlerEvent,
+): Promise<AssignmentReadResult> {
+  const { store, error } = getOfferStore(event);
   if (store) {
     try {
       const value = await store.get(KEY, { type: 'json' });
@@ -67,19 +117,27 @@ export async function readAssignments(): Promise<AssignmentReadResult> {
         assignments: memoryFallback ?? emptyAssignments(),
         storage: 'blobs',
       };
-    } catch (error) {
-      console.error('[assignments] Blobs read failed:', error);
+    } catch (readError) {
+      const message = readError instanceof Error ? readError.message : String(readError);
+      console.error('[assignments] Blobs read failed:', readError);
+      return {
+        assignments: memoryFallback ?? emptyAssignments(),
+        storage: 'memory',
+        error: message,
+      };
     }
   }
 
   return {
     assignments: memoryFallback ?? emptyAssignments(),
     storage: 'memory',
+    error,
   };
 }
 
 export async function writeAssignments(
   next: OfferAssignments,
+  event?: HandlerEvent,
 ): Promise<AssignmentWriteResult> {
   const normalised: OfferAssignments = {
     ...normaliseAssignments(next),
@@ -89,12 +147,13 @@ export async function writeAssignments(
 
   memoryFallback = normalised;
 
-  const store = getOfferStore();
+  const { store, error } = getOfferStore(event);
   if (!store) {
     return {
       assignments: normalised,
       storage: 'memory',
       persisted: false,
+      error,
     };
   }
 
@@ -106,13 +165,16 @@ export async function writeAssignments(
       assignments: normalised,
       storage: 'blobs',
       persisted: ok,
+      error: ok ? undefined : 'Blobs write did not verify',
     };
-  } catch (error) {
-    console.error('[assignments] Blobs write failed:', error);
+  } catch (writeError) {
+    const message = writeError instanceof Error ? writeError.message : String(writeError);
+    console.error('[assignments] Blobs write failed:', writeError);
     return {
       assignments: normalised,
       storage: 'memory',
       persisted: false,
+      error: message,
     };
   }
 }

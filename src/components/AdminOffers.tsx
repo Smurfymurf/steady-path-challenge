@@ -587,9 +587,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
 
       {storageBackend === 'memory' && (
         <p className={styles.warn}>
-          Storage is in-memory only — saves will not reach the live game. Netlify Blobs
-          must be available to Functions. Redeploy the site from Netlify/Git so Blobs
-          context is attached, then Save again.
+          Storage is in-memory only — saves will not reach the live game. After this
+          deploy fix (Blobs + Lambda connect), unlock again and Save. You usually will
+          not see a Blobs entry in Netlify until the first successful save.
         </p>
       )}
 

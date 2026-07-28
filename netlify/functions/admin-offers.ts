@@ -28,11 +28,12 @@ export const handler: Handler = async (event) => {
   }
 
   if (event.httpMethod === 'GET') {
-    const { assignments, storage } = await readAssignments();
+    const { assignments, storage, error } = await readAssignments(event);
     return json(200, {
       success: true,
       configured: isMaxBountyConfigured(),
       storage,
+      storageError: error,
       slotCount: countAssignedSlots(assignments),
       assignments,
     });
@@ -75,13 +76,15 @@ export const handler: Handler = async (event) => {
         next.geos[geo as OfferGeo] = resolved;
       }
 
-      const saved = await writeAssignments(next);
+      const saved = await writeAssignments(next, event);
       if (!saved.persisted) {
         return json(503, {
           error: 'Offers could not be saved to Netlify Blobs — the game will not see them.',
           code: 'storage_unavailable',
-          hint: 'Redeploy via Netlify (not a static-only upload) so Functions have Blobs access. Check Site settings → Blobs.',
+          hint: saved.error
+            ?? 'Functions v1 need connectLambda (shipped in this fix). Redeploy, then Save again. Blobs appear in Netlify after the first successful write.',
           storage: saved.storage,
+          storageError: saved.error,
           assignments: saved.assignments,
         });
       }

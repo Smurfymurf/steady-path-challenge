@@ -17,7 +17,7 @@ export const handler: Handler = async (event) => {
 
   const requested = (event.queryStringParameters?.geo ?? 'FALLBACK').toUpperCase();
   const geo = (requested === 'UK' ? 'GB' : requested) as OfferGeo;
-  const { assignments, storage } = await readAssignments();
+  const { assignments, storage } = await readAssignments(event);
 
   const primary = assignments.geos[geo] ?? [];
   const fallback = assignments.geos.FALLBACK ?? [];
