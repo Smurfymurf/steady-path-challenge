@@ -141,6 +141,15 @@
   box-shadow: 0 18px 40px rgba(36, 80, 50, 0.22);
 }
 
+@media (max-width: 820px) {
+  .game-screen {
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100dvh;
+  }
+}
+
 .game-screen__content {
   position: relative;
   z-index: 1;
@@ -426,6 +435,14 @@
   border-radius: 28px;
   min-height: min(100dvh - 32px, 820px);
   background: #1b1240;
+}
+
+@media (max-width: 820px) {
+  .spin-shell {
+    max-width: none;
+    border-radius: 0;
+    min-height: 100dvh;
+  }
 }
 
 .maze-svg.is-tracking {

@@ -138,6 +138,43 @@ export function hasNextLevel(levelId: number): boolean {
   return levels.some((level) => level.id === levelId + 1);
 }
 
+/** Extra corridor width on phones so the finger stays readable on the path. */
+export const MOBILE_PATH_WIDTH_SCALE = 1.42;
+
+/**
+ * Scales corridor + start/finish radii for touch devices.
+ * Path geometry is unchanged so desktop levels stay identical.
+ */
+export function scaleLevelPathWidths(
+  level: LevelDefinition,
+  scale: number,
+): LevelDefinition {
+  if (scale === 1) {
+    return level;
+  }
+
+  return {
+    ...level,
+    visualWidth: level.visualWidth * scale,
+    interactionWidth: level.interactionWidth * scale,
+    start: {
+      ...level.start,
+      radius: level.start.radius * scale,
+    },
+    finish: {
+      ...level.finish,
+      radius: level.finish.radius * scale,
+    },
+    narrowing: level.narrowing
+      ? {
+          ...level.narrowing,
+          endWidth: level.narrowing.endWidth * scale,
+          endVisualWidth: level.narrowing.endVisualWidth * scale,
+        }
+      : undefined,
+  };
+}
+
 function easeInQuad(t: number): number {
   return t * t;
 }

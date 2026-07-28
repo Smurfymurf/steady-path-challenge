@@ -13,6 +13,14 @@
   background: #071820;
 }
 
+@media (max-width: 820px) {
+  .landing {
+    max-width: none;
+    border-radius: 0;
+    min-height: 100dvh;
+  }
+}
+
 .soundToggle {
   position: absolute;
   top: 14px;

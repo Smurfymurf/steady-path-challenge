@@ -1,4 +1,4 @@
-import { json, requireAdmin, type Handler } from './_lib/http';
+import { json, adminGate, type Handler } from './_lib/http';
 import { isMaxBountyConfigured, listCampaigns } from './_lib/maxbounty';
 
 /**
@@ -9,8 +9,9 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return json(405, { error: 'Method not allowed' });
   }
-  if (!requireAdmin(event)) {
-    return json(401, { error: 'Unauthorized' });
+  const denied = adminGate(event);
+  if (denied) {
+    return denied;
   }
   if (!isMaxBountyConfigured()) {
     return json(503, {

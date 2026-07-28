@@ -1,3 +1,10 @@
+import { json, adminGate, type Handler } from './_lib/http';
+import {
+  getCampaign,
+  getTrackingLink,
+  isMaxBountyConfigured,
+} from './_lib/maxbounty';
+import { readAssignments, writeAssignments } from './_lib/assignments';
 import {
   emptyAssignments,
   OFFER_GEOS,
@@ -6,21 +13,15 @@ import {
   type OfferAssignments,
   type OfferGeo,
 } from './_lib/offerTypes';
-import { readAssignments, writeAssignments } from './_lib/assignments';
-import { json, requireAdmin, type Handler } from './_lib/http';
-import {
-  getCampaign,
-  getTrackingLink,
-  isMaxBountyConfigured,
-} from './_lib/maxbounty';
 
 /**
  * GET/PUT /.netlify/functions/admin-offers
  * Manage per-geo MaxBounty campaign slots for the spin wheel.
  */
 export const handler: Handler = async (event) => {
-  if (!requireAdmin(event)) {
-    return json(401, { error: 'Unauthorized' });
+  const denied = adminGate(event);
+  if (denied) {
+    return denied;
   }
 
   if (event.httpMethod === 'GET') {

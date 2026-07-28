@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -11,6 +12,8 @@ import {
   getLevel,
   getTotalLevels,
   hasNextLevel,
+  MOBILE_PATH_WIDTH_SCALE,
+  scaleLevelPathWidths,
 } from '../config/levels';
 import {
   evaluatePointerSample,
@@ -80,7 +83,22 @@ export function GameScreen({
   showScoreCard = false,
   pendingScore = null,
 }: GameScreenProps) {
-  const level = getLevel(levelId);
+  const [pathWidthScale, setPathWidthScale] = useState(1);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 820px)');
+    const syncScale = () => {
+      setPathWidthScale(media.matches ? MOBILE_PATH_WIDTH_SCALE : 1);
+    };
+    syncScale();
+    media.addEventListener('change', syncScale);
+    return () => media.removeEventListener('change', syncScale);
+  }, []);
+
+  const level = useMemo(
+    () => scaleLevelPathWidths(getLevel(levelId), pathWidthScale),
+    [levelId, pathWidthScale],
+  );
   const scene = getSceneTheme(levelId);
   const timeLimitMs = level.timeLimitSec * 1000;
 

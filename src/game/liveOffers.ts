@@ -11,7 +11,7 @@ import {
  */
 export async function fetchWheelForGeo(geo: OfferGeo): Promise<WheelConfig> {
   try {
-    const response = await fetch(`/.netlify/functions/offers?geo=${encodeURIComponent(geo)}`, {
+    const response = await fetch(`/api/offers?geo=${encodeURIComponent(geo)}`, {
       cache: 'no-store',
     });
     if (!response.ok) {

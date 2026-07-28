@@ -11,6 +11,14 @@
   background: #071820;
 }
 
+@media (max-width: 820px) {
+  .screen {
+    max-width: none;
+    border-radius: 0;
+    min-height: 100dvh;
+  }
+}
+
 .content {
   position: relative;
   z-index: 1;

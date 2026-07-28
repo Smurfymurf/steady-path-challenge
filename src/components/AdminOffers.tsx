@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type FormEvent,
 } from 'react';
@@ -16,9 +15,39 @@ import {
 import styles from './AdminOffers.module.css';
 
 const SESSION_KEY = 'fc-admin-token';
+const API = {
+  offers: '/api/admin-offers',
+  campaigns: '/api/mb-campaigns',
+} as const;
 
 interface AdminOffersProps {
   onExit: () => void;
+}
+
+function applyAssignments(
+  data: OfferAssignments,
+  setAssignments: (value: OfferAssignments) => void,
+  setDraft: (value: Record<OfferGeo, AssignedCampaign[]>) => void,
+) {
+  setAssignments(data);
+  setDraft({
+    US: [...data.geos.US],
+    GB: [...data.geos.GB],
+    AU: [...data.geos.AU],
+    NZ: [...data.geos.NZ],
+    FALLBACK: [...data.geos.FALLBACK],
+  });
+}
+
+function authMessage(status: number, data: { error?: string; hint?: string; code?: string }): string {
+  if (data.code === 'admin_not_configured' || status === 503 && data.error?.includes('ADMIN_PASSWORD')) {
+    return data.hint
+      ?? 'ADMIN_PASSWORD is not set on Netlify. Add it under Site settings → Environment variables, then redeploy.';
+  }
+  if (status === 401) {
+    return 'Wrong admin password.';
+  }
+  return data.error ?? data.hint ?? 'Request failed';
 }
 
 export function AdminOffers({ onExit }: AdminOffersProps) {
@@ -38,97 +67,159 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   const [status, setStatus] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [bootstrapping, setBootstrapping] = useState(() => Boolean(sessionStorage.getItem(SESSION_KEY)));
 
-  const authHeaders = useMemo(
-    () => ({
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    }),
-    [token],
-  );
+  const clearSession = useCallback(() => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setToken('');
+    setBootstrapping(false);
+  }, []);
+
+  const loadCampaigns = useCallback(async (authToken: string, list: string) => {
+    const response = await fetch(
+      `${API.campaigns}?list=${encodeURIComponent(list)}&limit=50`,
+      { headers: { Authorization: `Bearer ${authToken}` } },
+    );
+    const data = (await response.json()) as {
+      campaigns?: MbCampaignSummary[];
+      error?: string;
+      hint?: string;
+      code?: string;
+    };
+    if (response.status === 401 || data.code === 'admin_not_configured') {
+      clearSession();
+      throw new Error(authMessage(response.status, data));
+    }
+    if (!response.ok) {
+      throw new Error(authMessage(response.status, data));
+    }
+    setCampaigns(data.campaigns ?? []);
+    return (data.campaigns ?? []).length;
+  }, [clearSession]);
 
   const loadAssignments = useCallback(async (authToken: string) => {
-    const response = await fetch('/.netlify/functions/admin-offers', {
+    const response = await fetch(API.offers, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
-    if (response.status === 401) {
-      sessionStorage.removeItem(SESSION_KEY);
-      setToken('');
-      throw new Error('Unauthorized');
-    }
     const data = (await response.json()) as {
       success?: boolean;
       configured?: boolean;
       assignments?: OfferAssignments;
       error?: string;
+      hint?: string;
+      code?: string;
     };
+    if (response.status === 401 || data.code === 'admin_not_configured') {
+      clearSession();
+      throw new Error(authMessage(response.status, data));
+    }
     if (!response.ok) {
-      throw new Error(data.error ?? 'Failed to load assignments');
+      throw new Error(authMessage(response.status, data));
     }
     setConfigured(Boolean(data.configured));
     if (data.assignments) {
-      setAssignments(data.assignments);
-      setDraft({
-        US: [...data.assignments.geos.US],
-        GB: [...data.assignments.geos.GB],
-        AU: [...data.assignments.geos.AU],
-        NZ: [...data.assignments.geos.NZ],
-        FALLBACK: [...data.assignments.geos.FALLBACK],
-      });
+      applyAssignments(data.assignments, setAssignments, setDraft);
     }
-  }, []);
+  }, [clearSession]);
 
-  const loadCampaigns = useCallback(async () => {
+  // * Restore an existing session only after the server confirms the password.
+  useEffect(() => {
+    if (!token) {
+      setBootstrapping(false);
+      return;
+    }
+
+    let cancelled = false;
+    setBootstrapping(true);
+
+    void (async () => {
+      try {
+        await loadAssignments(token);
+        if (cancelled) {
+          return;
+        }
+        const count = await loadCampaigns(token, listType);
+        if (!cancelled) {
+          setStatus(`Loaded ${count} campaigns (${listType}).`);
+        }
+      } catch (error: unknown) {
+        if (!cancelled) {
+          setStatus(error instanceof Error ? error.message : 'Load failed');
+        }
+      } finally {
+        if (!cancelled) {
+          setBootstrapping(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // * Intentionally omit listType — catalog refresh is manual / after login.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, loadAssignments, loadCampaigns]);
+
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault();
+    const candidate = password.trim();
+    if (!candidate || busy) {
+      return;
+    }
+
+    setBusy(true);
+    setStatus('Checking password…');
+    try {
+      const response = await fetch(API.offers, {
+        headers: { Authorization: `Bearer ${candidate}` },
+      });
+      const data = (await response.json()) as {
+        configured?: boolean;
+        assignments?: OfferAssignments;
+        error?: string;
+        hint?: string;
+        code?: string;
+      };
+
+      if (!response.ok) {
+        setStatus(authMessage(response.status, data));
+        return;
+      }
+
+      sessionStorage.setItem(SESSION_KEY, candidate);
+      setConfigured(Boolean(data.configured));
+      if (data.assignments) {
+        applyAssignments(data.assignments, setAssignments, setDraft);
+      }
+      setPassword('');
+      setToken(candidate);
+      setStatus('Unlocked.');
+    } catch {
+      setStatus('Could not reach the admin API. Is the site deployed with Netlify functions?');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setStatus('');
+  };
+
+  const refreshCampaigns = async () => {
     if (!token) {
       return;
     }
     setBusy(true);
     setStatus('Loading MaxBounty campaigns…');
     try {
-      const response = await fetch(
-        `/.netlify/functions/mb-campaigns?list=${encodeURIComponent(listType)}&limit=50`,
-        { headers: authHeaders },
-      );
-      const data = (await response.json()) as {
-        campaigns?: MbCampaignSummary[];
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(data.error ?? 'Campaign fetch failed');
-      }
-      setCampaigns(data.campaigns ?? []);
-      setStatus(`Loaded ${(data.campaigns ?? []).length} campaigns (${listType}).`);
+      const count = await loadCampaigns(token, listType);
+      setStatus(`Loaded ${count} campaigns (${listType}).`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Campaign fetch failed');
     } finally {
       setBusy(false);
     }
-  }, [authHeaders, listType, token]);
-
-  useEffect(() => {
-    if (!token) {
-      return;
-    }
-    void loadAssignments(token)
-      .then(() => loadCampaigns())
-      .catch((error: unknown) => {
-        setStatus(error instanceof Error ? error.message : 'Load failed');
-      });
-  }, [token, loadAssignments, loadCampaigns]);
-
-  const handleLogin = (event: FormEvent) => {
-    event.preventDefault();
-    if (!password.trim()) {
-      return;
-    }
-    sessionStorage.setItem(SESSION_KEY, password.trim());
-    setToken(password.trim());
-    setPassword('');
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    setToken('');
   };
 
   const addCampaign = (campaign: MbCampaignSummary) => {
@@ -180,12 +271,18 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   };
 
   const save = async () => {
+    if (!token) {
+      return;
+    }
     setBusy(true);
     setStatus('Saving + generating tracking links…');
     try {
-      const response = await fetch('/.netlify/functions/admin-offers', {
+      const response = await fetch(API.offers, {
         method: 'PUT',
-        headers: authHeaders,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           geos: Object.fromEntries(
             OFFER_GEOS.map((geo) => [
@@ -201,19 +298,18 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
       const data = (await response.json()) as {
         assignments?: OfferAssignments;
         error?: string;
+        hint?: string;
+        code?: string;
       };
+      if (response.status === 401 || data.code === 'admin_not_configured') {
+        clearSession();
+        throw new Error(authMessage(response.status, data));
+      }
       if (!response.ok) {
-        throw new Error(data.error ?? 'Save failed');
+        throw new Error(authMessage(response.status, data));
       }
       if (data.assignments) {
-        setAssignments(data.assignments);
-        setDraft({
-          US: [...data.assignments.geos.US],
-          GB: [...data.assignments.geos.GB],
-          AU: [...data.assignments.geos.AU],
-          NZ: [...data.assignments.geos.NZ],
-          FALLBACK: [...data.assignments.geos.FALLBACK],
-        });
+        applyAssignments(data.assignments, setAssignments, setDraft);
       }
       setStatus('Saved. Tracking links refreshed for all geos.');
     } catch (error) {
@@ -226,7 +322,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   if (!token) {
     return (
       <main className={styles.shell}>
-        <form className={styles.login} onSubmit={handleLogin}>
+        <form className={styles.login} onSubmit={(event) => void handleLogin(event)}>
           <h1>Offer Admin</h1>
           <p>Enter the admin password to manage MaxBounty wheel offers by country.</p>
           <input
@@ -235,12 +331,24 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Admin password"
             autoComplete="current-password"
+            disabled={busy}
           />
-          <button type="submit">Unlock</button>
+          <button type="submit" disabled={busy}>
+            {busy ? 'Checking…' : 'Unlock'}
+          </button>
           <button type="button" className={styles.ghost} onClick={onExit}>
             Back to game
           </button>
+          {status && <p className={styles.status}>{status}</p>}
         </form>
+      </main>
+    );
+  }
+
+  if (bootstrapping) {
+    return (
+      <main className={styles.shell}>
+        <p className={styles.status}>Loading admin…</p>
       </main>
     );
   }
@@ -304,7 +412,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
               <option value="amPicks">amPicks</option>
               <option value="new">new</option>
             </select>
-            <button type="button" onClick={() => void loadCampaigns()} disabled={busy}>
+            <button type="button" onClick={() => void refreshCampaigns()} disabled={busy}>
               Refresh
             </button>
           </div>
