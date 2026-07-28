@@ -122,17 +122,6 @@ export default function App() {
     };
   }, [isAdmin]);
 
-  if (isAdmin) {
-    return (
-      <AdminOffers
-        onExit={() => {
-          window.history.pushState({}, '', '/');
-          setIsAdmin(false);
-        }}
-      />
-    );
-  }
-
   const beginAtLevel = useCallback((levelId: number) => {
     const nextSession = createSession(soundEnabled, levelId);
     updateSession(nextSession);
@@ -235,6 +224,17 @@ export default function App() {
     setPendingScore(null);
     setGameState('landing');
   }, [updateSession]);
+
+  if (isAdmin) {
+    return (
+      <AdminOffers
+        onExit={() => {
+          window.history.pushState({}, '', '/');
+          setIsAdmin(false);
+        }}
+      />
+    );
+  }
 
   const grandTotal = session ? sumLevelScores(session.levelScores) : 0;
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
