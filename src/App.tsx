@@ -9,6 +9,7 @@ import { getLevel, hasNextLevel } from './config/levels';
 import { getWheelForGeo, isPrizeWheelGeo, type OfferGeo, type WheelConfig } from './config/offers';
 import { detectVisitorGeo } from './game/geo';
 import { fetchWheelForGeo, type LiveWheelConfig } from './game/liveOffers';
+import { notifyNewVisitor } from './game/visitNotify';
 import {
   finaleTitle,
   sumLevelScores,
@@ -94,6 +95,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (isAdmin) {
+      return;
+    }
+
     let cancelled = false;
     detectVisitorGeo().then(async (result) => {
       if (cancelled) {
@@ -101,6 +106,11 @@ export default function App() {
       }
       setOfferGeo(result.offerGeo);
       setCountryCode(result.countryCode);
+      notifyNewVisitor({
+        countryCode: result.countryCode,
+        offerGeo: result.offerGeo,
+        prizeWheel: isPrizeWheelGeo(result.offerGeo) || isPrizeWheelGeo(result.countryCode),
+      });
       const liveWheel = await fetchWheelForGeo(result.offerGeo);
       if (!cancelled) {
         setWheel(liveWheel);
@@ -110,7 +120,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAdmin]);
 
   if (isAdmin) {
     return (
