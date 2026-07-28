@@ -75,6 +75,8 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
   const [token, setToken] = useState(() => sessionStorage.getItem(SESSION_KEY) ?? '');
   const [activeGeo, setActiveGeo] = useState<OfferGeo>('US');
   const [listType, setListType] = useState('recentlyApproved');
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
   const [matchActiveGeo, setMatchActiveGeo] = useState(true);
   const [approvedOnly, setApprovedOnly] = useState(true);
   const [campaigns, setCampaigns] = useState<MbCampaignSummary[]>([]);
@@ -104,6 +106,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     geo: OfferGeo,
     matchGeo: boolean,
     onlyApproved: boolean,
+    search = '',
   ) => {
     const params = new URLSearchParams({
       list,
@@ -113,6 +116,10 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     if (matchGeo && geo !== 'FALLBACK') {
       params.set('geo', geo);
     }
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.set('q', trimmedSearch);
+    }
 
     const response = await fetch(`${API.campaigns}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authToken}` },
@@ -120,6 +127,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     const data = (await response.json()) as {
       campaigns?: MbCampaignSummary[];
       scanned?: number;
+      mode?: string;
       error?: string;
       hint?: string;
       code?: string;
@@ -136,6 +144,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     return {
       campaigns: data.campaigns ?? [],
       scanned: nextScanned,
+      mode: data.mode ?? (trimmedSearch ? 'search' : 'list'),
     };
   }, [clearSession]);
 
@@ -185,6 +194,7 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
           activeGeo,
           matchActiveGeo,
           approvedOnly,
+          '',
         );
         if (!cancelled) {
           const geoNote = matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · ${activeGeo}` : '';
@@ -258,12 +268,15 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
     setStatus('');
   };
 
-  const refreshCampaigns = async () => {
+  const refreshCampaigns = async (searchOverride?: string) => {
     if (!token) {
       return;
     }
+    const search = (searchOverride ?? activeSearch).trim();
     setBusy(true);
-    setStatus('Filtering MaxBounty catalog…');
+    setStatus(search
+      ? `Searching MaxBounty for “${search}”…`
+      : 'Filtering MaxBounty catalog…');
     try {
       const loaded = await loadCampaigns(
         token,
@@ -271,18 +284,45 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
         activeGeo,
         matchActiveGeo,
         approvedOnly,
+        search,
       );
-      setStatus(
-        `Showing ${loaded.campaigns.length} offers`
-        + ` (scanned ${loaded.scanned} from “${listType}”)`
-        + `${matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · geo ${activeGeo}` : ' · all geos'}`
-        + `${approvedOnly ? ' · approved to run' : ''}.`,
-      );
+      if (search) {
+        setStatus(
+          loaded.mode === 'id'
+            ? (loaded.campaigns.length
+              ? `Found campaign #${search}.`
+              : `No campaign #${search} matched the current geo/approval filters.`)
+            : `Found ${loaded.campaigns.length} name match${loaded.campaigns.length === 1 ? '' : 'es'}`
+              + ` (scanned ${loaded.scanned} offers across MaxBounty lists)`
+              + `${matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · geo ${activeGeo}` : ''}`
+              + `${approvedOnly ? ' · approved to run' : ''}.`,
+        );
+      } else {
+        setStatus(
+          `Showing ${loaded.campaigns.length} offers`
+          + ` (scanned ${loaded.scanned} from “${listType}”)`
+          + `${matchActiveGeo && activeGeo !== 'FALLBACK' ? ` · geo ${activeGeo}` : ' · all geos'}`
+          + `${approvedOnly ? ' · approved to run' : ''}.`,
+        );
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Campaign fetch failed');
     } finally {
       setBusy(false);
     }
+  };
+
+  const runSearch = (event?: FormEvent) => {
+    event?.preventDefault();
+    const next = searchInput.trim();
+    setActiveSearch(next);
+    void refreshCampaigns(next);
+  };
+
+  const clearSearch = () => {
+    setSearchInput('');
+    setActiveSearch('');
+    void refreshCampaigns('');
   };
 
   const addCampaign = async (campaign: MbCampaignSummary) => {
@@ -535,12 +575,14 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
               setActiveGeo(geo);
               if (token && matchActiveGeo) {
                 setBusy(true);
-                void loadCampaigns(token, listType, geo, true, approvedOnly)
+                void loadCampaigns(token, listType, geo, true, approvedOnly, activeSearch)
                   .then((loaded) => {
                     setStatus(
-                      `Showing ${loaded.campaigns.length} offers for ${geo}`
-                      + ` (scanned ${loaded.scanned} from “${listType}”)`
-                      + `${approvedOnly ? ' · approved to run' : ''}.`,
+                      activeSearch
+                        ? `Showing ${loaded.campaigns.length} search result${loaded.campaigns.length === 1 ? '' : 's'} for ${geo}.`
+                        : `Showing ${loaded.campaigns.length} offers for ${geo}`
+                          + ` (scanned ${loaded.scanned} from “${listType}”)`
+                          + `${approvedOnly ? ' · approved to run' : ''}.`,
                     );
                   })
                   .catch((error: unknown) => {
@@ -563,6 +605,8 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
             <select
               value={listType}
               onChange={(event) => setListType(event.target.value)}
+              disabled={Boolean(activeSearch)}
+              title={activeSearch ? 'Clear search to browse lists' : undefined}
             >
               <option value="recentlyApproved">recentlyApproved</option>
               <option value="popular">popular</option>
@@ -577,6 +621,24 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
               {busy ? 'Loading…' : 'Apply filters'}
             </button>
           </div>
+
+          <form className={styles.searchRow} onSubmit={runSearch}>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Search offer name or campaign ID…"
+              disabled={busy}
+            />
+            <button type="submit" disabled={busy || !searchInput.trim()}>
+              Search
+            </button>
+            {activeSearch && (
+              <button type="button" className={styles.ghost} onClick={clearSearch} disabled={busy}>
+                Clear
+              </button>
+            )}
+          </form>
 
           <div className={styles.filters}>
             <label className={styles.check}>
@@ -600,7 +662,9 @@ export function AdminOffers({ onExit }: AdminOffersProps) {
           <ul className={styles.list}>
             {campaigns.length === 0 && (
               <li className={styles.empty}>
-                No campaigns match these filters. Try another list or turn off a filter, then Apply.
+                {activeSearch
+                  ? `No offers matched “${activeSearch}”. Try another name/ID, or turn off geo/approval filters.`
+                  : 'No campaigns match these filters. Try search, another list, or turn off a filter.'}
               </li>
             )}
             {campaigns.map((campaign) => (

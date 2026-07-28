@@ -207,6 +207,81 @@ export interface EnrichedCampaign {
   epc?: number;
 }
 
+async function enrichFromListItem(campaign: MbListCampaign): Promise<EnrichedCampaign> {
+  try {
+    const detail = await getCampaign(campaign.campaign_id);
+    return {
+      campaignId: campaign.campaign_id,
+      name: detail.details?.name ?? campaign.name,
+      defaultRate: detail.commission?.rate ?? campaign.default_rate,
+      status: detail.details?.status ?? campaign.status,
+      rateType: detail.commission?.rate_type ?? campaign.rate_type,
+      thumbnail: detail.details?.thumbnail ?? campaign.thumbnail,
+      affiliateStatus: detail.details?.affiliate_campaign_status,
+      allowedCountries: detail.allowed_countries ?? [],
+      epc: detail.details?.epc,
+    };
+  } catch {
+    return {
+      campaignId: campaign.campaign_id,
+      name: campaign.name,
+      defaultRate: campaign.default_rate,
+      status: campaign.status,
+      rateType: campaign.rate_type,
+      thumbnail: campaign.thumbnail,
+      affiliateStatus: undefined,
+      allowedCountries: [],
+    };
+  }
+}
+
+async function enrichFromDetail(
+  campaignId: number,
+  detail: MbCampaignDetailPayload,
+): Promise<EnrichedCampaign> {
+  return {
+    campaignId,
+    name: detail.details?.name ?? `Campaign ${campaignId}`,
+    defaultRate: detail.commission?.rate,
+    status: detail.details?.status,
+    rateType: detail.commission?.rate_type,
+    thumbnail: detail.details?.thumbnail,
+    affiliateStatus: detail.details?.affiliate_campaign_status,
+    allowedCountries: detail.allowed_countries ?? [],
+    epc: detail.details?.epc,
+  };
+}
+
+function passesFilters(
+  campaign: EnrichedCampaign,
+  geo: string,
+  approvedOnly: boolean,
+): boolean {
+  if (approvedOnly && !isAffiliateApproved(campaign.affiliateStatus)) {
+    if ((campaign.affiliateStatus ?? '').trim() === '' && campaign.status?.toLowerCase() === 'active') {
+      // keep
+    } else {
+      return false;
+    }
+  }
+  if (geo && geo !== 'FALLBACK' && geo !== 'ALL') {
+    return campaignMatchesGeo(campaign.allowedCountries, geo);
+  }
+  return true;
+}
+
+const SEARCH_LISTS = [
+  'recentlyApproved',
+  'popular',
+  'top',
+  'trending',
+  'new',
+  'suggested',
+  'amPicks',
+  'bookmarked',
+  'recentlyViewed',
+] as const;
+
 /**
  * List campaigns then hydrate details so we can filter by geo + approval.
  */
@@ -224,50 +299,86 @@ export async function listEnrichedCampaigns(options: {
   const geo = options.geo?.toUpperCase() || '';
 
   const listed = await listCampaigns(list, page, limit);
-  const enriched = await mapPool(listed, 6, async (campaign) => {
-    try {
-      const detail = await getCampaign(campaign.campaign_id);
-      return {
-        campaignId: campaign.campaign_id,
-        name: detail.details?.name ?? campaign.name,
-        defaultRate: detail.commission?.rate ?? campaign.default_rate,
-        status: detail.details?.status ?? campaign.status,
-        rateType: detail.commission?.rate_type ?? campaign.rate_type,
-        thumbnail: detail.details?.thumbnail ?? campaign.thumbnail,
-        affiliateStatus: detail.details?.affiliate_campaign_status,
-        allowedCountries: detail.allowed_countries ?? [],
-        epc: detail.details?.epc,
-      } satisfies EnrichedCampaign;
-    } catch {
-      return {
-        campaignId: campaign.campaign_id,
-        name: campaign.name,
-        defaultRate: campaign.default_rate,
-        status: campaign.status,
-        rateType: campaign.rate_type,
-        thumbnail: campaign.thumbnail,
-        affiliateStatus: undefined,
-        allowedCountries: [],
-      } satisfies EnrichedCampaign;
-    }
-  });
-
-  const filtered = enriched.filter((campaign) => {
-    if (approvedOnly && !isAffiliateApproved(campaign.affiliateStatus)) {
-      // * List endpoint "Active" often means runnable without extra approval.
-      if ((campaign.affiliateStatus ?? '').trim() === '' && campaign.status?.toLowerCase() === 'active') {
-        // keep — Active with blank affiliate status
-      } else {
-        return false;
-      }
-    }
-    if (geo && geo !== 'FALLBACK' && geo !== 'ALL') {
-      return campaignMatchesGeo(campaign.allowedCountries, geo);
-    }
-    return true;
-  });
+  const enriched = await mapPool(listed, 6, enrichFromListItem);
+  const filtered = enriched.filter((campaign) => passesFilters(campaign, geo, approvedOnly));
 
   return { campaigns: filtered, scanned: listed.length };
+}
+
+/**
+ * Find campaigns by ID or name.
+ * MaxBounty has no search endpoint, so name search crawls their curated lists
+ * and matches locally; numeric queries hit /campaign/{id} directly.
+ */
+export async function searchEnrichedCampaigns(options: {
+  query: string;
+  geo?: string;
+  approvedOnly?: boolean;
+  maxResults?: number;
+}): Promise<{ campaigns: EnrichedCampaign[]; scanned: number; mode: 'id' | 'name' }> {
+  const query = options.query.trim();
+  const approvedOnly = options.approvedOnly !== false;
+  const geo = options.geo?.toUpperCase() || '';
+  const maxResults = Math.min(40, options.maxResults ?? 30);
+
+  if (!query) {
+    return { campaigns: [], scanned: 0, mode: 'name' };
+  }
+
+  const asId = Number.parseInt(query, 10);
+  if (/^\d+$/.test(query) && Number.isFinite(asId)) {
+    try {
+      const detail = await getCampaign(asId);
+      const enriched = await enrichFromDetail(asId, detail);
+      const campaigns = passesFilters(enriched, geo, approvedOnly) ? [enriched] : [];
+      return { campaigns, scanned: 1, mode: 'id' };
+    } catch {
+      return { campaigns: [], scanned: 1, mode: 'id' };
+    }
+  }
+
+  const needle = query.toLowerCase();
+  const byId = new Map<number, MbListCampaign>();
+
+  // * Crawl several MB lists / pages — names are on the list payload, so we
+  //   can filter cheaply before hydrating details.
+  await mapPool([...SEARCH_LISTS], 4, async (listName) => {
+    for (const page of [1, 2]) {
+      try {
+        const pageItems = await listCampaigns(listName, page, 100);
+        for (const item of pageItems) {
+          if (!byId.has(item.campaign_id)) {
+            byId.set(item.campaign_id, item);
+          }
+        }
+      } catch {
+        // * Skip unavailable lists/pages.
+      }
+    }
+  });
+
+  const scanned = byId.size;
+  const nameMatches = [...byId.values()].filter((item) => (
+    item.name.toLowerCase().includes(needle)
+  ));
+
+  // * Prefer tighter matches first (starts-with, then shorter names).
+  nameMatches.sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    const aStarts = aName.startsWith(needle) ? 0 : 1;
+    const bStarts = bName.startsWith(needle) ? 0 : 1;
+    if (aStarts !== bStarts) {
+      return aStarts - bStarts;
+    }
+    return aName.length - bName.length;
+  });
+
+  const shortlist = nameMatches.slice(0, maxResults);
+  const enriched = await mapPool(shortlist, 6, enrichFromListItem);
+  const filtered = enriched.filter((campaign) => passesFilters(campaign, geo, approvedOnly));
+
+  return { campaigns: filtered, scanned, mode: 'name' };
 }
 
 export async function getTrackingLink(

@@ -175,6 +175,43 @@ export function scaleLevelPathWidths(
   };
 }
 
+/**
+ * Mobile-only path tuning. Desktop returns the canonical level definition.
+ * Level 3 starts wide, then tapers from halfway to a tighter finish.
+ */
+export function adaptLevelForMobile(
+  level: LevelDefinition,
+  isMobile: boolean,
+): LevelDefinition {
+  if (!isMobile) {
+    return level;
+  }
+
+  if (level.id === 3) {
+    return {
+      ...level,
+      // * Wide opening so the first half is readable on a finger.
+      visualWidth: 26,
+      interactionWidth: 26,
+      start: {
+        ...level.start,
+        radius: 18,
+      },
+      finish: {
+        ...level.finish,
+        radius: 11,
+      },
+      narrowing: {
+        startProgress: 0.5,
+        endWidth: 9,
+        endVisualWidth: 9,
+      },
+    };
+  }
+
+  return scaleLevelPathWidths(level, MOBILE_PATH_WIDTH_SCALE);
+}
+
 function easeInQuad(t: number): number {
   return t * t;
 }

@@ -12,8 +12,7 @@ import {
   getLevel,
   getTotalLevels,
   hasNextLevel,
-  MOBILE_PATH_WIDTH_SCALE,
-  scaleLevelPathWidths,
+  adaptLevelForMobile,
 } from '../config/levels';
 import {
   evaluatePointerSample,
@@ -83,21 +82,21 @@ export function GameScreen({
   showScoreCard = false,
   pendingScore = null,
 }: GameScreenProps) {
-  const [pathWidthScale, setPathWidthScale] = useState(1);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 820px)');
-    const syncScale = () => {
-      setPathWidthScale(media.matches ? MOBILE_PATH_WIDTH_SCALE : 1);
+    const syncViewport = () => {
+      setIsMobileViewport(media.matches);
     };
-    syncScale();
-    media.addEventListener('change', syncScale);
-    return () => media.removeEventListener('change', syncScale);
+    syncViewport();
+    media.addEventListener('change', syncViewport);
+    return () => media.removeEventListener('change', syncViewport);
   }, []);
 
   const level = useMemo(
-    () => scaleLevelPathWidths(getLevel(levelId), pathWidthScale),
-    [levelId, pathWidthScale],
+    () => adaptLevelForMobile(getLevel(levelId), isMobileViewport),
+    [levelId, isMobileViewport],
   );
   const scene = getSceneTheme(levelId);
   const timeLimitMs = level.timeLimitSec * 1000;

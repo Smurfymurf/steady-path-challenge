@@ -138,6 +138,36 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.searchRow input[type='search'] {
+  flex: 1 1 220px;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0f1720;
+  color: #fff;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.searchRow button {
+  appearance: none;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #ff3d7f;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
 .check {
   display: inline-flex;
   align-items: center;
