@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { playSfx } from '../game/sound';
 import { LivesDisplay } from './LivesDisplay';
 
@@ -28,6 +29,16 @@ export function LevelHeader({
   timerVisible = true,
   onHome,
 }: LevelHeaderProps) {
+  const [hideProgressBanner, setHideProgressBanner] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 820px)');
+    const sync = () => setHideProgressBanner(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
   const display = Math.max(0, timeRemainingSec);
   const ratio = timeLimitSec > 0 ? display / timeLimitSec : 0;
   const urgent = display <= Math.min(3, timeLimitSec * 0.4);
@@ -35,7 +46,7 @@ export function LevelHeader({
   const ring = Math.max(0, Math.min(1, ratio));
 
   return (
-    <header className="level-header">
+    <header className={`level-header${hideProgressBanner ? ' is-compact' : ''}`}>
       <div className="level-header__top">
         <button
           type="button"
@@ -87,15 +98,17 @@ export function LevelHeader({
         <LivesDisplay lives={lives} />
       </div>
 
-      <div className="level-header__banner">
-        <h2 className="level-header__title">{levelName}</h2>
-        <div className="level-header__bar" aria-hidden="true">
-          <span style={{ width: `${Math.round(progress * 100)}%` }} />
+      {!hideProgressBanner && (
+        <div className="level-header__banner">
+          <h2 className="level-header__title">{levelName}</h2>
+          <div className="level-header__bar" aria-hidden="true">
+            <span style={{ width: `${Math.round(progress * 100)}%` }} />
+          </div>
+          <p className="level-header__hint">
+            {levelNumber}/{totalLevels} · Hold START · Beat the clock
+          </p>
         </div>
-        <p className="level-header__hint">
-          {levelNumber}/{totalLevels} · Hold START · Beat the clock
-        </p>
-      </div>
+      )}
     </header>
   );
 }
