@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { SpinWheel } from '../components/SpinWheel';
+import { getWheelForGeo, isPrizeWheelGeo, type OfferGeo, type WheelConfig } from '../config/offers';
+import { detectVisitorGeo } from '../game/geo';
+import { fetchWheelForGeo, type LiveWheelConfig } from '../game/liveOffers';
+import { playSfx } from '../game/sound';
 import { playPressureSfx, setPressureAudioEnabled, unlockPressureAudio } from './audio';
 import { pressureConfig, type PressureStage } from './config';
 import { CrackOverlay } from './CrackOverlay';
@@ -29,6 +34,11 @@ export function PressureTest() {
   const [held, setHeld] = useState(false);
   const [result, setResult] = useState<PressureResult | null>(null);
   const [scareActive, setScareActive] = useState(false);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const [wheel, setWheel] = useState<WheelConfig>(() => getWheelForGeo('FALLBACK'));
+  const [wheelSource, setWheelSource] = useState<LiveWheelConfig['source']>('placeholder');
+  const [offerGeo, setOfferGeo] = useState<OfferGeo>('FALLBACK');
+  const [countryCode, setCountryCode] = useState<string | null>(null);
 
   const heldRef = useRef(false);
   const progressRef = useRef(0);
@@ -44,6 +54,32 @@ export function PressureTest() {
 
   useEffect(() => {
     setPressureAudioEnabled(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    detectVisitorGeo().then(async (geoResult) => {
+      if (cancelled) {
+        return;
+      }
+      setOfferGeo(geoResult.offerGeo);
+      setCountryCode(geoResult.countryCode);
+      const liveWheel = await fetchWheelForGeo(geoResult.offerGeo);
+      if (!cancelled) {
+        setWheel(liveWheel);
+        setWheelSource(liveWheel.source);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const refreshWheel = useCallback(async (geo: OfferGeo) => {
+    const liveWheel = await fetchWheelForGeo(geo);
+    setWheel(liveWheel);
+    setWheelSource(liveWheel.source);
+    return liveWheel;
   }, []);
 
   const resetRun = useCallback(() => {
@@ -67,6 +103,7 @@ export function PressureTest() {
     setHeadline(idleHeadline());
     setResult(null);
     setScareActive(false);
+    setShowSpinWheel(false);
     pointerIdRef.current = null;
   }, []);
 
@@ -263,8 +300,32 @@ export function PressureTest() {
   const freezing = phase === 'freeze';
   const onResult = phase === 'result';
   const crackPersist = onResult || freezing || photoReveal > 0.55;
-  const showCrack = phase !== 'black' && phase !== 'scare';
-  const distortContent = photoReveal > 0.35 || onResult || freezing;
+  const showCrack = phase !== 'black' && phase !== 'scare' && !showSpinWheel;
+  const distortContent = !showSpinWheel && (photoReveal > 0.35 || onResult || freezing);
+  const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
+
+  const handleSpin = useCallback(() => {
+    if (!showPrizeWheel) {
+      return;
+    }
+    void refreshWheel(offerGeo).finally(() => {
+      setShowSpinWheel(true);
+    });
+  }, [offerGeo, refreshWheel, showPrizeWheel]);
+
+  if (showSpinWheel && showPrizeWheel) {
+    return (
+      <SpinWheel
+        wheel={wheel}
+        countryCode={countryCode}
+        wheelSource={wheelSource}
+        onClose={() => {
+          playSfx('tap');
+          setShowSpinWheel(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div
@@ -277,7 +338,13 @@ export function PressureTest() {
         .join(' ')}
     >
       {onResult && result ? (
-        <ResultScreen result={result} onRetry={resetRun} distort={distortContent} />
+        <ResultScreen
+          result={result}
+          onRetry={resetRun}
+          distort={distortContent}
+          showPrizeWheel={showPrizeWheel}
+          onSpin={handleSpin}
+        />
       ) : (
         <div
           className={styles.content}

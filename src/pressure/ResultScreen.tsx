@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { playSfx } from '../game/sound';
 import { sharePressureChallenge } from './share';
 import styles from './ResultScreen.module.css';
 
@@ -12,15 +13,24 @@ interface ResultScreenProps {
   onRetry: () => void;
   /** Apply glass displacement so finish text looks warped under the crack. */
   distort?: boolean;
+  showPrizeWheel?: boolean;
+  onSpin?: () => void;
 }
 
 /**
- * Post-scare virality card.
+ * Post-scare virality card — optional prize spin for eligible geos.
  */
-export function ResultScreen({ result, onRetry, distort = false }: ResultScreenProps) {
+export function ResultScreen({
+  result,
+  onRetry,
+  distort = false,
+  showPrizeWheel = false,
+  onSpin,
+}: ResultScreenProps) {
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
 
   const handleShare = async () => {
+    playSfx('tap');
     const outcome = await sharePressureChallenge();
     setShareStatus(outcome);
   };
@@ -44,7 +54,24 @@ export function ResultScreen({ result, onRetry, distort = false }: ResultScreenP
         </div>
       </dl>
 
-      <button type="button" className={styles.share} onClick={() => void handleShare()}>
+      {showPrizeWheel && onSpin && (
+        <button
+          type="button"
+          className={styles.spin}
+          onClick={() => {
+            playSfx('go');
+            onSpin();
+          }}
+        >
+          SPIN TO WIN A PRIZE
+        </button>
+      )}
+
+      <button
+        type="button"
+        className={showPrizeWheel ? styles.shareSecondary : styles.share}
+        onClick={() => void handleShare()}
+      >
         CHALLENGE A FRIEND
       </button>
       {shareStatus === 'copied' && (
