@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { matchChallengePath } from './challenges/types';
 import { AdminOffers } from './components/AdminOffers';
 import { LandingScreen } from './components/LandingScreen';
 import { GameScreen } from './components/GameScreen';
@@ -26,11 +27,16 @@ import {
 } from './game/session';
 import { playSfx, setSoundEnabled as setAudioEnabled } from './game/sound';
 import type { FailKind } from './components/GameScreen';
+import { PressureTest } from './pressure/PressureTest';
 import './styles/global.css';
 import './styles/game.css';
 
 function isAdminPath(): boolean {
   return window.location.pathname.replace(/\/+$/, '') === '/admin';
+}
+
+function isPressureTestPath(): boolean {
+  return matchChallengePath(window.location.pathname)?.id === 'pressure-test';
 }
 
 function tryEnterFullscreen(): void {
@@ -64,6 +70,7 @@ function readDemoLevelFromUrl(): number | null {
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(isAdminPath);
+  const [isPressureTest] = useState(isPressureTestPath);
   const [gameState, setGameState] = useState<GameState>('landing');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(
     gameConfig.soundEnabledByDefault,
@@ -95,7 +102,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || isPressureTest) {
       return;
     }
 
@@ -120,7 +127,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin]);
+  }, [isAdmin, isPressureTest]);
 
   const beginAtLevel = useCallback((levelId: number) => {
     const nextSession = createSession(soundEnabled, levelId);
@@ -224,6 +231,10 @@ export default function App() {
     setPendingScore(null);
     setGameState('landing');
   }, [updateSession]);
+
+  if (isPressureTest) {
+    return <PressureTest />;
+  }
 
   if (isAdmin) {
     return (

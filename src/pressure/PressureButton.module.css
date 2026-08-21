@@ -1,0 +1,93 @@
+.button {
+  position: relative;
+  width: min(42vw, 168px);
+  height: min(42vw, 168px);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  color: #fff;
+  font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 3.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  background:
+    radial-gradient(circle at 32% 28%, #ff6b7a 0%, transparent 42%),
+    radial-gradient(circle at 50% 55%, #e10600 0%, #9b0000 70%, #5c0000 100%);
+  box-shadow:
+    0 14px 28px rgba(180, 0, 20, 0.35),
+    0 4px 0 #6a0000,
+    inset 0 2px 4px rgba(255, 255, 255, 0.35),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pressed {
+  transform: scale(0.94) translateY(2px);
+  box-shadow:
+    0 6px 14px rgba(180, 0, 20, 0.3),
+    0 2px 0 #6a0000,
+    inset 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.pulse {
+  animation: button-pulse 1.4s ease-in-out infinite;
+}
+
+.stress {
+  animation: button-stress 0.55s ease-in-out infinite;
+}
+
+.gloss {
+  position: absolute;
+  inset: 12% 18% auto;
+  height: 28%;
+  border-radius: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes button-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes button-stress {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .stress {
+    animation: none;
+  }
+}
