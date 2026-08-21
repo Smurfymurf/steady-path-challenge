@@ -7,6 +7,7 @@ import { playSfx } from '../game/sound';
 import { playPressureSfx, setPressureAudioEnabled, unlockPressureAudio } from './audio';
 import { pressureConfig, type PressureStage } from './config';
 import { CrackVideo } from './CrackVideo';
+import { progressToBleed } from './progressToBleed';
 import { preloadCrackVideo } from './preloadCrackVideo';
 import { formatPower, tickPressure } from './fakePressure';
 import { JumpscareTrigger } from './JumpscareTrigger';
@@ -309,6 +310,7 @@ export function PressureTest() {
   }, []);
 
   const percent = formatPower(progress);
+  const bleed = progressToBleed(progress);
   const showMeter = phase !== 'idle' && phase !== 'result' && phase !== 'black'
     && phase !== 'scare' && phase !== 'crackVideo';
   const showButton = phase !== 'result' && phase !== 'black' && phase !== 'scare'
@@ -319,6 +321,11 @@ export function PressureTest() {
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
   const showCrackPlay = phase === 'crackVideo';
   const showCrackHold = onResult && !showSpinWheel;
+  const showCrackBleed = !showCrackPlay && !showCrackHold
+    && phase !== 'black' && phase !== 'scare'
+    && bleed > 0.01;
+  const crackActive = showCrackPlay || showCrackHold || showCrackBleed;
+  const crackMode = showCrackPlay ? 'play' : showCrackHold ? 'hold' : 'bleed';
 
   const handleSpin = useCallback(() => {
     if (!showPrizeWheel) {
@@ -395,10 +402,11 @@ export function PressureTest() {
         </div>
       )}
 
-      {(showCrackPlay || showCrackHold) && (
+      {crackActive && (
         <CrackVideo
           active
-          mode={showCrackPlay ? 'play' : 'hold'}
+          mode={crackMode}
+          bleed={showCrackPlay || showCrackHold ? 1 : bleed}
           onPlayComplete={showCrackPlay ? onCrackVideoComplete : undefined}
         />
       )}
