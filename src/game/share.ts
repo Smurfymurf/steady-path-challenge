@@ -2,13 +2,11 @@ import { gameConfig } from '../config/game';
 
 export function getShareUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
-    const url = new URL(window.location.href);
+    const url = new URL(`${window.location.origin}/maze`);
     url.searchParams.set('ref', 'share');
-    url.searchParams.delete('level');
-    url.searchParams.delete('demo');
     return url.toString();
   }
-  return `${gameConfig.shareUrl}?ref=share`;
+  return `${gameConfig.shareUrl}/maze?ref=share`;
 }
 
 export function getShareText(): string {

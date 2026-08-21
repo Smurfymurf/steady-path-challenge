@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { matchChallengePath } from './challenges/types';
+import { isMazePath as pathIsMaze } from './challenges/types';
 import { AdminOffers } from './components/AdminOffers';
 import { LandingScreen } from './components/LandingScreen';
 import { GameScreen } from './components/GameScreen';
@@ -35,8 +35,8 @@ function isAdminPath(): boolean {
   return window.location.pathname.replace(/\/+$/, '') === '/admin';
 }
 
-function isPressureTestPath(): boolean {
-  return matchChallengePath(window.location.pathname)?.id === 'pressure-test';
+function isMazeRoute(): boolean {
+  return pathIsMaze(window.location.pathname);
 }
 
 function tryEnterFullscreen(): void {
@@ -70,7 +70,7 @@ function readDemoLevelFromUrl(): number | null {
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(isAdminPath);
-  const [isPressureTest] = useState(isPressureTestPath);
+  const [isMaze] = useState(isMazeRoute);
   const [gameState, setGameState] = useState<GameState>('landing');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(
     gameConfig.soundEnabledByDefault,
@@ -102,7 +102,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin || isPressureTest) {
+    if (isAdmin || !isMaze) {
       return;
     }
 
@@ -127,7 +127,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, isPressureTest]);
+  }, [isAdmin, isMaze]);
 
   const beginAtLevel = useCallback((levelId: number) => {
     const nextSession = createSession(soundEnabled, levelId);
@@ -138,7 +138,7 @@ export default function App() {
   }, [soundEnabled, updateSession]);
 
   useEffect(() => {
-    if (demoBootstrapped.current) {
+    if (!isMaze || demoBootstrapped.current) {
       return;
     }
     const demoLevel = readDemoLevelFromUrl();
@@ -147,7 +147,7 @@ export default function App() {
     }
     demoBootstrapped.current = true;
     beginAtLevel(demoLevel);
-  }, [beginAtLevel]);
+  }, [beginAtLevel, isMaze]);
 
   const handleStart = useCallback(() => {
     playSfx('go');
@@ -232,10 +232,6 @@ export default function App() {
     setGameState('landing');
   }, [updateSession]);
 
-  if (isPressureTest) {
-    return <PressureTest />;
-  }
-
   if (isAdmin) {
     return (
       <AdminOffers
@@ -245,6 +241,11 @@ export default function App() {
         }}
       />
     );
+  }
+
+  // * Homepage (+ legacy /pressure-test) is Pressure Test; maze lives at /maze.
+  if (!isMaze) {
+    return <PressureTest />;
   }
 
   const grandTotal = session ? sumLevelScores(session.levelScores) : 0;

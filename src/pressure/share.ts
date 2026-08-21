@@ -7,11 +7,11 @@ import { pressureConfig } from './config';
 
 export function getPressureShareUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
-    const url = new URL(`${window.location.origin}/pressure-test`);
+    const url = new URL(window.location.origin);
     url.searchParams.set('ref', 'share');
     return url.toString();
   }
-  return `${gameConfig.shareUrl}/pressure-test?ref=share`;
+  return `${gameConfig.shareUrl}?ref=share`;
 }
 
 export async function sharePressureChallenge(): Promise<'shared' | 'copied' | 'failed'> {
