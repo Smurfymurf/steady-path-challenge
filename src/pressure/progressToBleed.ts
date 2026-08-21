@@ -1,6 +1,9 @@
 import { pressureConfig } from './config';
 
-/** Map hold progress → patchy bleed 0–1 (decays when they let go). */
+/**
+ * Map hold progress → hairline bleed 0–1.
+ * Stays very low through most of the climb, then ramps hard near the end.
+ */
 export function progressToBleed(progress: number): number {
   const from = pressureConfig.crackBleedFrom;
   const to = pressureConfig.freezeAt;
@@ -11,6 +14,6 @@ export function progressToBleed(progress: number): number {
     return 1;
   }
   const t = (progress - from) / (to - from);
-  // * Ease-in so early malfunction is sparse, then accelerates.
-  return t * t;
+  // * Aggressive ease-in: mostly empty until the final push.
+  return t * t * t;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createBreakPatches, paintBreakMask } from './breakMask';
+import { createCrackLines, paintBreakMask } from './breakMask';
 import { pressureConfig } from './config';
 import styles from './CrackVideo.module.css';
 
@@ -14,8 +14,8 @@ interface CrackVideoProps {
 }
 
 /**
- * Crack video revealed through irregular breaking patches — not a flat crossfade.
- * Release the button → bleed drops → patches heal and the UI looks normal again.
+ * Crack video revealed through sparse growing hairlines — not blobs or a flat fade.
+ * Release the button → bleed drops → lines shrink away and the UI looks normal again.
  */
 export function CrackVideo({
   active,
@@ -26,7 +26,7 @@ export function CrackVideo({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const maskRef = useRef<HTMLCanvasElement | null>(null);
-  const patchesRef = useRef(createBreakPatches(47, 30));
+  const linesRef = useRef(createCrackLines(61, 58));
   const completedRef = useRef(false);
   const onCompleteRef = useRef(onPlayComplete);
   const modeRef = useRef(mode);
@@ -188,19 +188,10 @@ export function CrackVideo({
       }
 
       if (currentMode === 'bleed') {
-        paintBreakMask(maskCtx, w, h, patchesRef.current, amount, timeSec);
+        paintBreakMask(maskCtx, w, h, linesRef.current, amount, timeSec);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(mask, 0, 0);
         ctx.globalCompositeOperation = 'source-over';
-
-        // * Tiny chromatic tear on a few rows — sells “panel failure”.
-        if (amount > 0.25 && amount < 0.95) {
-          const row = ((Math.sin(timeSec * 13) * 0.5 + 0.5) * h) | 0;
-          const shift = (2 + amount * 4) | 0;
-          ctx.globalAlpha = 0.35;
-          ctx.drawImage(canvas, shift, row, w, 3, 0, row, w, 3);
-          ctx.globalAlpha = 1;
-        }
       } else if (currentMode === 'hold') {
         ctx.globalAlpha = 0.62;
         // * Redraw with opacity for readable end copy.

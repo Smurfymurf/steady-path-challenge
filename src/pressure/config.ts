@@ -14,8 +14,8 @@ export const pressureConfig = {
   scareHoldMs: 950,
   /** Decay rate when finger lifts before freeze (percent per second). */
   releaseDecayPerSec: 18,
-  /** Hold progress where patchy crack-video bleed begins. */
-  crackBleedFrom: 78,
+  /** Hold progress where sparse crack hairlines begin. */
+  crackBleedFrom: 82,
   /** Trimmed web crack clip (first ~2.8s of the source video). */
   crackVideoSrc: '/assets/pressure/crack-web.mp4',
   /** Safety cap if `ended` never fires. */
