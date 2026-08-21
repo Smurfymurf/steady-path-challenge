@@ -38,14 +38,6 @@
     inset 0 3px 10px rgba(0, 0, 0, 0.35);
 }
 
-.pulse {
-  animation: button-pulse 1.4s ease-in-out infinite;
-}
-
-.stress {
-  animation: button-stress 0.55s ease-in-out infinite;
-}
-
 .gloss {
   position: absolute;
   inset: 12% 18% auto;
@@ -62,33 +54,4 @@
 .label {
   position: relative;
   z-index: 1;
-}
-
-@keyframes button-pulse {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.08);
-  }
-}
-
-@keyframes button-stress {
-  0%,
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.03);
-    filter: brightness(1.12);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pulse,
-  .stress {
-    animation: none;
-  }
 }

@@ -3,7 +3,6 @@ import styles from './PressureButton.module.css';
 
 interface PressureButtonProps {
   pressed: boolean;
-  stage: string;
   onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onPointerUp: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onPointerCancel: (event: ReactPointerEvent<HTMLButtonElement>) => void;
@@ -12,28 +11,22 @@ interface PressureButtonProps {
 }
 
 /**
- * Glossy red emergency-style hold target.
+ * Glossy red emergency-style hold target — steady look; no pulse / stress motion.
  */
 export function PressureButton({
   pressed,
-  stage,
   onPointerDown,
   onPointerUp,
   onPointerCancel,
   onPointerMove,
   disabled = false,
 }: PressureButtonProps) {
-  const pulse = stage === 'challenge' || stage === 'cracks' || stage === 'stress';
-  const stress = stage === 'stress';
-
   return (
     <button
       type="button"
       className={[
         styles.button,
         pressed ? styles.pressed : '',
-        pulse ? styles.pulse : '',
-        stress ? styles.stress : '',
       ]
         .filter(Boolean)
         .join(' ')}

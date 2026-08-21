@@ -350,7 +350,6 @@ export function PressureTest() {
     && phase !== 'scare' && phase !== 'crackVideo';
   const showButton = phase !== 'result' && phase !== 'black' && phase !== 'scare'
     && phase !== 'crackVideo';
-  const stressed = phase === 'stress';
   const freezing = phase === 'freeze';
   const onResult = phase === 'result';
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
@@ -388,7 +387,6 @@ export function PressureTest() {
     <div
       className={[
         styles.shell,
-        stressed ? styles.stressed : '',
         freezing ? styles.freezing : '',
       ]
         .filter(Boolean)
@@ -417,7 +415,6 @@ export function PressureTest() {
             <div className={styles.buttonWrap}>
               <PressureButton
                 pressed={held}
-                stage={phase}
                 disabled={freezing}
                 onPointerDown={startHold}
                 onPointerUp={endHold}
