@@ -15,7 +15,7 @@ interface CrackVideoProps {
 
 /**
  * Crack video revealed through sparse growing hairlines — not blobs or a flat fade.
- * Release the button → bleed drops → lines shrink away and the UI looks normal again.
+ * Lines ratchet forward (grow / hold); they only shrink when the finger is released.
  */
 export function CrackVideo({
   active,
@@ -31,6 +31,8 @@ export function CrackVideo({
   const onCompleteRef = useRef(onPlayComplete);
   const modeRef = useRef(mode);
   const bleedRef = useRef(bleed);
+  /** Peak bleed while holding — stops meter wobble from pulsing the mask. */
+  const peakBleedRef = useRef(0);
   const rafRef = useRef(0);
 
   onCompleteRef.current = onPlayComplete;
@@ -41,6 +43,7 @@ export function CrackVideo({
     if (!active) {
       return undefined;
     }
+    peakBleedRef.current = 0;
     const video = videoRef.current;
     if (!video) {
       return undefined;
@@ -121,11 +124,24 @@ export function CrackVideo({
         void video.play().then(snap).catch(snap);
         return;
       }
-      // * Bleed — keep a living malfunction by scrubbing early frames.
-      video.loop = true;
-      void video.play().catch(() => {
-        // Still paint whatever frame we have.
-      });
+      // * Bleed — freeze a single frame so mask lines stay still (no video pulse).
+      video.loop = false;
+      const park = () => {
+        try {
+          video.pause();
+          if (video.duration && Number.isFinite(video.duration)) {
+            video.currentTime = Math.min(0.08, video.duration * 0.04);
+          }
+        } catch {
+          // ignore
+        }
+      };
+      if (video.readyState >= 2) {
+        park();
+      } else {
+        video.addEventListener('loadeddata', park, { once: true });
+      }
+      void video.play().then(park).catch(park);
     };
 
     const onEnded = () => {
@@ -136,8 +152,7 @@ export function CrackVideo({
     video.addEventListener('ended', onEnded);
     syncMode();
 
-    const started = performance.now();
-    const draw = (now: number) => {
+    const draw = () => {
       rafRef.current = requestAnimationFrame(draw);
       const canvas = canvasRef.current;
       const mask = maskRef.current;
@@ -152,9 +167,20 @@ export function CrackVideo({
 
       const w = canvas.width;
       const h = canvas.height;
-      const timeSec = (now - started) / 1000;
       const currentMode = modeRef.current;
-      let amount = currentMode === 'bleed' ? bleedRef.current : 1;
+      const liveBleed = currentMode === 'bleed' ? bleedRef.current : 1;
+
+      // * Ratchet: grow with pressure; ignore small dips; heal only on a real release drop.
+      if (currentMode === 'bleed') {
+        if (liveBleed > peakBleedRef.current) {
+          peakBleedRef.current = liveBleed;
+        } else if (peakBleedRef.current - liveBleed > 0.045) {
+          peakBleedRef.current = liveBleed;
+        }
+      } else {
+        peakBleedRef.current = 1;
+      }
+      const amount = currentMode === 'bleed' ? peakBleedRef.current : 1;
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, w, h);
@@ -163,10 +189,17 @@ export function CrackVideo({
         return;
       }
 
-      // * During bleed, scrub within the early crack formation for a live glitch feel.
+      // * Bleed mask stays on a frozen frame; only advance slowly as cracks densify.
       if (currentMode === 'bleed' && video.readyState >= 2 && video.duration) {
-        const target = Math.min(video.duration * 0.55, 0.05 + amount * Math.min(1.2, video.duration * 0.5));
-        if (Math.abs(video.currentTime - target) > 0.12) {
+        if (!video.paused) {
+          video.pause();
+        }
+        const target = Math.min(
+          video.duration * 0.45,
+          0.04 + amount * Math.min(0.9, video.duration * 0.4),
+        );
+        // * Only seek forward so the texture never flickers backward.
+        if (target > video.currentTime + 0.05) {
           try {
             video.currentTime = target;
           } catch {
@@ -188,7 +221,7 @@ export function CrackVideo({
       }
 
       if (currentMode === 'bleed') {
-        paintBreakMask(maskCtx, w, h, linesRef.current, amount, timeSec);
+        paintBreakMask(maskCtx, w, h, linesRef.current, amount, 0);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(mask, 0, 0);
         ctx.globalCompositeOperation = 'source-over';

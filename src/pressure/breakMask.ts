@@ -190,11 +190,9 @@ export function paintBreakMask(
       continue;
     }
 
-    // * Later-born lines wait longer; early ones stay short.
-    const local = Math.min(
-      1,
-      Math.max(0, (bleed - line.birth) / Math.max(0.12, 0.55 - line.birth * 0.2)),
-    );
+    // * Grow once from birth, then hold — no oscillating length / alpha.
+    const growWindow = Math.max(0.18, 0.42 - line.birth * 0.15);
+    const local = Math.min(1, Math.max(0, (bleed - line.birth) / growWindow));
     if (local <= 0.02) {
       continue;
     }
@@ -204,11 +202,12 @@ export function paintBreakMask(
       continue;
     }
 
+    // * Ease out so each crack lengthens then locks.
     const growth = local * local * (3 - 2 * local);
-    // * Length stays stubby until very late.
-    const lengthFactor = bleed < 0.85
-      ? 0.12 + growth * 0.35
-      : 0.12 + growth * (0.35 + ((bleed - 0.85) / 0.15) * 0.7);
+    const settled = growth >= 0.98;
+    const lengthFactor = settled
+      ? (bleed < 0.85 ? 0.47 : 0.47 + ((bleed - 0.85) / 0.15) * 0.53)
+      : 0.12 + growth * 0.35;
     const length = line.maxLength * shortEdge * lengthFactor;
     const x1 = line.x * width;
     const y1 = line.y * height;
@@ -219,7 +218,7 @@ export function paintBreakMask(
       (0.8 + line.weight * 1.4) * (bleed < 0.9 ? 1 : 1 + (bleed - 0.9) * 2),
     );
 
-    ctx.globalAlpha = 0.75 + growth * 0.25;
+    ctx.globalAlpha = settled ? 1 : 0.8 + growth * 0.2;
     ctx.lineWidth = thickness;
     strokeJaggedLine(ctx, x1, y1, x2, y2, line.jagged * thickness, index * 17.13);
 
