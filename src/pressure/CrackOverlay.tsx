@@ -1,4 +1,5 @@
-import { pressureConfig } from './config';
+import { useEffect, useRef } from 'react';
+import { CrackGLRenderer } from './CrackGL';
 import styles from './CrackOverlay.module.css';
 
 interface CrackOverlayProps {
@@ -16,8 +17,7 @@ interface CrackOverlayProps {
 }
 
 /**
- * Photo crack only — no SVG hairlines.
- * Button-sized while holding so the finger hides it until lift-off.
+ * Procedural WebGL glass crack — grows with reveal, no PNG plate.
  */
 export function CrackOverlay({
   photoReveal,
@@ -25,15 +25,78 @@ export function CrackOverlay({
   variant = 'button',
   revealOverButton = false,
 }: CrackOverlayProps) {
-  const showPhoto = photoReveal > 0.01 || persist;
+  const show = photoReveal > 0.01 || persist;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rendererRef = useRef<CrackGLRenderer | null>(null);
+  const revealRef = useRef(photoReveal);
+  const persistRef = useRef(persist);
+  const rafRef = useRef(0);
 
-  if (!showPhoto) {
+  revealRef.current = photoReveal;
+  persistRef.current = persist;
+
+  useEffect(() => {
+    if (!show) {
+      return undefined;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return undefined;
+    }
+
+    let renderer: CrackGLRenderer | null = null;
+    try {
+      renderer = new CrackGLRenderer(canvas, variant === 'button' ? 77 : 91);
+      rendererRef.current = renderer;
+    } catch {
+      rendererRef.current = null;
+      return undefined;
+    }
+
+    const resize = () => {
+      const parent = canvas.parentElement;
+      if (!parent || !rendererRef.current) {
+        return;
+      }
+      const rect = parent.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      rendererRef.current.resize(rect.width, rect.height, dpr);
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    if (canvas.parentElement) {
+      ro.observe(canvas.parentElement);
+    }
+
+    const started = performance.now();
+    const frame = (now: number) => {
+      rafRef.current = requestAnimationFrame(frame);
+      const active = rendererRef.current;
+      if (!active) {
+        return;
+      }
+      const reveal = persistRef.current ? 1 : revealRef.current;
+      const opacity = persistRef.current
+        ? 1
+        : Math.min(1, 0.25 + revealRef.current * 0.85);
+      active.draw(reveal, opacity, (now - started) / 1000);
+    };
+    rafRef.current = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      renderer?.dispose();
+      rendererRef.current = null;
+    };
+  }, [show, variant]);
+
+  if (!show) {
     return null;
   }
 
-  const clipPercent = Math.min(150, 12 + photoReveal * 140);
-  const photoOpacity = persist ? 1 : Math.min(1, 0.2 + photoReveal * 0.9);
-  const distort = persist ? 1 : Math.min(1, photoReveal);
+  const distortScale = persist ? 12 : Math.min(14, 3 + photoReveal * 12);
 
   return (
     <div
@@ -47,6 +110,7 @@ export function CrackOverlay({
         .join(' ')}
       aria-hidden
     >
+      {/* * Soft procedural warp under finish text (no PNG displacement map). */}
       <svg className={styles.filterHost} aria-hidden>
         <defs>
           <filter
@@ -57,38 +121,25 @@ export function CrackOverlay({
             height="140%"
             colorInterpolationFilters="sRGB"
           >
-            <feImage
-              href={pressureConfig.crackAsset}
-              result="crackMap"
-              preserveAspectRatio="xMidYMid meet"
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.045"
+              numOctaves="3"
+              seed="7"
+              result="noise"
             />
             <feDisplacementMap
               in="SourceGraphic"
-              in2="crackMap"
-              scale={3 + distort * 14}
+              in2="noise"
+              scale={distortScale}
               xChannelSelector="R"
-              yChannelSelector="A"
+              yChannelSelector="G"
             />
           </filter>
         </defs>
       </svg>
 
-      <div
-        className={styles.photoWrap}
-        style={{
-          opacity: photoOpacity,
-          clipPath: persist
-            ? 'circle(150% at 50% 50%)'
-            : `circle(${clipPercent}% at 50% 50%)`,
-        }}
-      >
-        <img
-          className={styles.photo}
-          src={pressureConfig.crackAsset}
-          alt=""
-          draggable={false}
-        />
-      </div>
+      <canvas ref={canvasRef} className={styles.canvas} />
     </div>
   );
 }

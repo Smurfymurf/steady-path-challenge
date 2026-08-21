@@ -13,11 +13,10 @@ export const pressureConfig = {
   scareHoldMs: 950,
   /** Decay rate when finger lifts before freeze (percent per second). */
   releaseDecayPerSec: 18,
-  /** Progress where the photo crack starts emerging. */
+  /** Progress where the glass crack starts emerging. */
   crackRevealFrom: 96.5,
-  /** Progress where the photo crack is fully shown. */
+  /** Progress where the glass crack is fully shown. */
   crackRevealTo: 99,
-  crackAsset: '/assets/pressure/screen-crack.png',
 } as const;
 
 export type PressureStage =
