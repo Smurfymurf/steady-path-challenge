@@ -25,49 +25,104 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-export function createCrackLines(seed = 61, count = 55): CrackLine[] {
+export function createCrackLines(seed = 61, count = 60): CrackLine[] {
   const rand = mulberry32(seed);
   const lines: CrackLine[] = [];
+  // * Hold button sits near the vertical mid of the diagnostic UI.
+  const bx = 0.5;
+  const by = 0.56;
 
-  // * A few early centre hairlines under the finger.
-  for (let i = 0; i < 6; i += 1) {
-    const a = (i / 6) * Math.PI * 2 + (rand() - 0.5) * 0.4;
+  const pushFromButton = (
+    radiusMin: number,
+    radiusMax: number,
+    birthMin: number,
+    birthMax: number,
+    lengthMin: number,
+    lengthMax: number,
+    n: number,
+  ) => {
+    for (let i = 0; i < n; i += 1) {
+      const a = (i / n) * Math.PI * 2 + (rand() - 0.5) * 0.55;
+      const dist = radiusMin + rand() * (radiusMax - radiusMin);
+      const x = bx + Math.cos(a) * dist;
+      const y = by + Math.sin(a) * dist * 0.92;
+      // * Grow outward from the button so cracks read as radiating from the press.
+      const outward = Math.atan2(y - by, x - bx) + (rand() - 0.5) * 0.35;
+      lines.push({
+        x: Math.min(0.96, Math.max(0.04, x)),
+        y: Math.min(0.96, Math.max(0.04, y)),
+        angle: outward,
+        maxLength: lengthMin + rand() * (lengthMax - lengthMin),
+        birth: birthMin + rand() * (birthMax - birthMin),
+        weight: 0.35 + rand() * 0.45,
+        jagged: 0.3 + rand() * 0.55,
+      });
+    }
+  };
+
+  // * 1) Impact core — tiny hairlines right on / under the button.
+  for (let i = 0; i < 10; i += 1) {
+    const a = (i / 10) * Math.PI * 2 + (rand() - 0.5) * 0.25;
     lines.push({
-      x: 0.5 + (rand() - 0.5) * 0.06,
-      y: 0.52 + (rand() - 0.5) * 0.05,
+      x: bx + (rand() - 0.5) * 0.04,
+      y: by + (rand() - 0.5) * 0.035,
       angle: a,
-      maxLength: 0.08 + rand() * 0.12,
-      birth: rand() * 0.18,
-      weight: 0.45 + rand() * 0.35,
-      jagged: 0.35 + rand() * 0.5,
+      maxLength: 0.06 + rand() * 0.1,
+      birth: rand() * 0.14,
+      weight: 0.5 + rand() * 0.35,
+      jagged: 0.35 + rand() * 0.45,
     });
   }
 
-  // * The rest appear later and stay short until late bleed.
-  for (let i = 0; i < count - 6; i += 1) {
-    lines.push({
-      x: rand(),
-      y: rand(),
-      angle: rand() * Math.PI * 2,
-      maxLength: 0.05 + rand() * 0.16,
-      birth: 0.2 + rand() * 0.75,
-      weight: 0.3 + rand() * 0.5,
-      jagged: 0.25 + rand() * 0.6,
-    });
+  // * 2) Near ring — still focused on the press point.
+  pushFromButton(0.04, 0.14, 0.1, 0.35, 0.07, 0.14, 16);
 
-    // * Occasional short spur off a late line.
-    if (rand() > 0.55) {
-      const parent = lines[lines.length - 1]!;
-      lines.push({
-        x: parent.x + Math.cos(parent.angle) * parent.maxLength * 0.35,
-        y: parent.y + Math.sin(parent.angle) * parent.maxLength * 0.35,
-        angle: parent.angle + (rand() > 0.5 ? 1 : -1) * (0.5 + rand() * 0.9),
-        maxLength: parent.maxLength * (0.35 + rand() * 0.35),
-        birth: Math.min(0.98, parent.birth + 0.08 + rand() * 0.2),
-        weight: parent.weight * 0.7,
-        jagged: parent.jagged,
-      });
+  // * 3) Mid ring — spreads a little further as pressure climbs.
+  pushFromButton(0.12, 0.28, 0.32, 0.58, 0.06, 0.15, 16);
+
+  // * 4) Outer / edges — only toward the end.
+  const late = Math.max(8, count - lines.length);
+  for (let i = 0; i < late; i += 1) {
+    const edge = rand();
+    let x = rand();
+    let y = rand();
+    if (edge < 0.25) {
+      x = rand() * 0.12;
+    } else if (edge < 0.5) {
+      x = 0.88 + rand() * 0.12;
+    } else if (edge < 0.75) {
+      y = rand() * 0.12;
+    } else {
+      y = 0.88 + rand() * 0.12;
     }
+    const outward = Math.atan2(y - by, x - bx) + (rand() - 0.5) * 0.5;
+    lines.push({
+      x,
+      y,
+      angle: outward,
+      maxLength: 0.05 + rand() * 0.14,
+      birth: 0.62 + rand() * 0.35,
+      weight: 0.3 + rand() * 0.4,
+      jagged: 0.25 + rand() * 0.55,
+    });
+  }
+
+  // * Short spurs off early/mid button-centred lines.
+  const baseCount = lines.length;
+  for (let i = 0; i < baseCount; i += 1) {
+    const parent = lines[i]!;
+    if (parent.birth > 0.55 || rand() < 0.45) {
+      continue;
+    }
+    lines.push({
+      x: parent.x + Math.cos(parent.angle) * parent.maxLength * 0.4,
+      y: parent.y + Math.sin(parent.angle) * parent.maxLength * 0.4,
+      angle: parent.angle + (rand() > 0.5 ? 1 : -1) * (0.55 + rand() * 0.85),
+      maxLength: parent.maxLength * (0.3 + rand() * 0.35),
+      birth: Math.min(0.7, parent.birth + 0.06 + rand() * 0.15),
+      weight: parent.weight * 0.7,
+      jagged: parent.jagged,
+    });
   }
 
   return lines.sort((a, b) => a.birth - b.birth);
