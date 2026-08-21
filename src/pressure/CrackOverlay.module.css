@@ -7,7 +7,7 @@
 
 .buttonAnchor {
   position: absolute;
-  inset: -22%;
+  inset: -20%;
   z-index: 3;
 }
 
@@ -18,19 +18,13 @@
 
 .screenAnchor {
   position: absolute;
-  inset: 0;
+  /* * Keep the finish crack local to the centre — not a full-bleed warp. */
+  inset: 12% 8%;
   z-index: 40;
 }
 
 .persist {
   z-index: 60;
-}
-
-.filterHost {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
 }
 
 .canvas {

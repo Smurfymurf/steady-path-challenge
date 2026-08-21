@@ -11,8 +11,6 @@ export interface PressureResult {
 interface ResultScreenProps {
   result: PressureResult;
   onRetry: () => void;
-  /** Apply glass displacement so finish text looks warped under the crack. */
-  distort?: boolean;
   showPrizeWheel?: boolean;
   onSpin?: () => void;
 }
@@ -23,7 +21,6 @@ interface ResultScreenProps {
 export function ResultScreen({
   result,
   onRetry,
-  distort = false,
   showPrizeWheel = false,
   onSpin,
 }: ResultScreenProps) {
@@ -36,10 +33,7 @@ export function ResultScreen({
   };
 
   return (
-    <div
-      className={`${styles.root} ${distort ? styles.distorted : ''}`}
-      style={distort ? { filter: 'url(#pressure-glass-distort)' } : undefined}
-    >
+    <div className={styles.root}>
       <p className={styles.eyebrow}>Finger Challenge</p>
       <h1 className={styles.title}>FINGER CHALLENGE COMPLETE</h1>
 

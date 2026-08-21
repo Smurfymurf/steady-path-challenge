@@ -11,11 +11,6 @@
   margin-inline: auto;
 }
 
-.distorted {
-  /* * Soft optical warping under the crack plate. */
-  transform: translateZ(0);
-}
-
 .eyebrow {
   margin: 0;
   font-size: 0.7rem;

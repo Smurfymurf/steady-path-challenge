@@ -300,7 +300,6 @@ export function PressureTest() {
   const onResult = phase === 'result';
   const showButtonCrack = showButton && photoReveal > 0.01;
   const showScreenCrack = (onResult || freezing) && !showSpinWheel;
-  const distortContent = !showSpinWheel && (photoReveal > 0.35 || onResult || freezing);
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
 
   const handleSpin = useCallback(() => {
@@ -340,15 +339,11 @@ export function PressureTest() {
         <ResultScreen
           result={result}
           onRetry={resetRun}
-          distort={distortContent}
           showPrizeWheel={showPrizeWheel}
           onSpin={handleSpin}
         />
       ) : (
-        <div
-          className={styles.content}
-          style={distortContent ? { filter: 'url(#pressure-glass-distort)' } : undefined}
-        >
+        <div className={styles.content}>
           {headline && <h1 className={styles.headline}>{headline}</h1>}
 
           <ProgressMeter percent={percent} visible={showMeter} />

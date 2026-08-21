@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { CrackGLRenderer } from './CrackGL';
+import { CrackCanvasPainter } from './CrackCanvas';
 import styles from './CrackOverlay.module.css';
 
 interface CrackOverlayProps {
-  /** Photo crack reveal 0–1 (ramps hard near 98–99%). */
+  /** Crack growth 0–1 (ramps hard near 98–99%). */
   photoReveal: number;
-  /** Keep the broken-glass look over the finish/result UI. */
+  /** Keep cracks over the finish / result UI. */
   persist?: boolean;
   /**
-   * `button` — small crack centred on the hold target (hidden under the finger).
-   * `screen` — larger plate for the finish / result overlay.
+   * `button` — small crack on the hold target (hidden under the finger).
+   * `screen` — larger plate for the finish overlay.
    */
   variant?: 'button' | 'screen';
   /** When true, button crack renders above the button (finger lifted). */
@@ -17,7 +17,8 @@ interface CrackOverlayProps {
 }
 
 /**
- * Procedural WebGL glass crack — grows with reveal, no PNG plate.
+ * Realistic cracked-glass overlay (Canvas2D).
+ * Transparent hairlines only — never warps the UI underneath.
  */
 export function CrackOverlay({
   photoReveal,
@@ -27,7 +28,7 @@ export function CrackOverlay({
 }: CrackOverlayProps) {
   const show = photoReveal > 0.01 || persist;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rendererRef = useRef<CrackGLRenderer | null>(null);
+  const painterRef = useRef<CrackCanvasPainter | null>(null);
   const revealRef = useRef(photoReveal);
   const persistRef = useRef(persist);
   const rafRef = useRef(0);
@@ -44,23 +45,21 @@ export function CrackOverlay({
       return undefined;
     }
 
-    let renderer: CrackGLRenderer | null = null;
-    try {
-      renderer = new CrackGLRenderer(canvas, variant === 'button' ? 77 : 91);
-      rendererRef.current = renderer;
-    } catch {
-      rendererRef.current = null;
+    const painter = new CrackCanvasPainter(variant === 'button' ? 77 : 91);
+    painterRef.current = painter;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
       return undefined;
     }
 
     const resize = () => {
       const parent = canvas.parentElement;
-      if (!parent || !rendererRef.current) {
+      if (!parent || !painterRef.current) {
         return;
       }
       const rect = parent.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      rendererRef.current.resize(rect.width, rect.height, dpr);
+      const dpr = window.devicePixelRatio || 1;
+      painterRef.current.resize(rect.width, rect.height, dpr, canvas);
     };
 
     resize();
@@ -69,34 +68,36 @@ export function CrackOverlay({
       ro.observe(canvas.parentElement);
     }
 
-    const started = performance.now();
-    const frame = (now: number) => {
+    let lastKey = '';
+    const frame = () => {
       rafRef.current = requestAnimationFrame(frame);
-      const active = rendererRef.current;
-      if (!active) {
+      const active = painterRef.current;
+      if (!active || !ctx) {
         return;
       }
       const reveal = persistRef.current ? 1 : revealRef.current;
       const opacity = persistRef.current
         ? 1
-        : Math.min(1, 0.25 + revealRef.current * 0.85);
-      active.draw(reveal, opacity, (now - started) / 1000);
+        : Math.min(1, 0.35 + revealRef.current * 0.75);
+      const key = `${Math.round(reveal * 100)}:${Math.round(opacity * 100)}:${canvas.width}x${canvas.height}`;
+      if (key === lastKey) {
+        return;
+      }
+      lastKey = key;
+      active.paint(ctx, reveal, opacity);
     };
     rafRef.current = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
-      renderer?.dispose();
-      rendererRef.current = null;
+      painterRef.current = null;
     };
   }, [show, variant]);
 
   if (!show) {
     return null;
   }
-
-  const distortScale = persist ? 12 : Math.min(14, 3 + photoReveal * 12);
 
   return (
     <div
@@ -110,35 +111,6 @@ export function CrackOverlay({
         .join(' ')}
       aria-hidden
     >
-      {/* * Soft procedural warp under finish text (no PNG displacement map). */}
-      <svg className={styles.filterHost} aria-hidden>
-        <defs>
-          <filter
-            id="pressure-glass-distort"
-            x="-20%"
-            y="-20%"
-            width="140%"
-            height="140%"
-            colorInterpolationFilters="sRGB"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.045"
-              numOctaves="3"
-              seed="7"
-              result="noise"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="noise"
-              scale={distortScale}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
-
       <canvas ref={canvasRef} className={styles.canvas} />
     </div>
   );
