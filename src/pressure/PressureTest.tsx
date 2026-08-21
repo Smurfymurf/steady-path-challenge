@@ -10,6 +10,12 @@ import { CrackVideo } from './CrackVideo';
 import { progressToBleed } from './progressToBleed';
 import { preloadCrackVideo } from './preloadCrackVideo';
 import { formatPower, tickPressure } from './fakePressure';
+import {
+  hapticBump,
+  hapticStop,
+  hapticTick,
+  markHapticGesture,
+} from './haptics';
 import { JumpscareTrigger } from './JumpscareTrigger';
 import { PressureButton } from './PressureButton';
 import { ProgressMeter } from './ProgressMeter';
@@ -49,6 +55,7 @@ export function PressureTest() {
   const lastStageForTaunt = useRef<UiPhase>('idle');
   const audioMarks = useRef({ tick: false, creak: false, crack: false, warning: false });
   const statusMarks = useRef({ pressureDetected: false, increaseForce: false });
+  const hapticMarks = useRef({ bleed30: false, bleed60: false, bleed90: false });
   const freezeTimer = useRef<number | null>(null);
   const pointerIdRef = useRef<number | null>(null);
 
@@ -94,6 +101,7 @@ export function PressureTest() {
     holdElapsedRef.current = 0;
     audioMarks.current = { tick: false, creak: false, crack: false, warning: false };
     statusMarks.current = { pressureDetected: false, increaseForce: false };
+    hapticMarks.current = { bleed30: false, bleed60: false, bleed90: false };
     lastStageForTaunt.current = 'idle';
     setHeld(false);
     setProgress(0);
@@ -123,15 +131,14 @@ export function PressureTest() {
     setProgress(pressureConfig.freezeAt);
     setStatus('');
     setHeadline('');
-    if (navigator.vibrate) {
-      navigator.vibrate(0);
-    }
+    hapticStop();
 
     // * Brief 99% beat, then play the cracked-screen video.
     freezeTimer.current = window.setTimeout(() => {
       phaseRef.current = 'crackVideo';
       setPhase('crackVideo');
       playPressureSfx('crack');
+      hapticBump();
     }, pressureConfig.freezeHoldMs);
   }, []);
 
@@ -205,8 +212,11 @@ export function PressureTest() {
             setStatus(taunt);
             lastTauntAt.current = now;
           }
-          if (nextStage === 'challenge' && navigator.vibrate) {
-            navigator.vibrate(12);
+          if (nextStage === 'challenge') {
+            hapticTick();
+          }
+          if (nextStage === 'cracks' || nextStage === 'stress') {
+            hapticBump();
           }
         }
       } else if (heldRef.current && nextStage !== 'idle') {
@@ -218,6 +228,24 @@ export function PressureTest() {
             setStatus(taunt);
             lastTauntAt.current = now;
           }
+        }
+      }
+
+      // * Patchy-bleed haptic milestones while the finger is still down.
+      if (heldRef.current) {
+        markHapticGesture();
+        const bleedNow = progressToBleed(tick.progress);
+        if (bleedNow >= 0.3 && !hapticMarks.current.bleed30) {
+          hapticMarks.current.bleed30 = true;
+          hapticTick();
+        }
+        if (bleedNow >= 0.6 && !hapticMarks.current.bleed60) {
+          hapticMarks.current.bleed60 = true;
+          hapticBump();
+        }
+        if (bleedNow >= 0.9 && !hapticMarks.current.bleed90) {
+          hapticMarks.current.bleed90 = true;
+          hapticBump();
         }
       }
 
@@ -287,6 +315,7 @@ export function PressureTest() {
     }
     event.preventDefault();
     unlockPressureAudio();
+    markHapticGesture();
     pointerIdRef.current = event.pointerId;
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -304,9 +333,15 @@ export function PressureTest() {
       setPhase('discover');
     }
 
-    if (navigator.vibrate) {
-      navigator.vibrate(8);
+    hapticTick();
+  }, []);
+
+  const onPointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!heldRef.current || event.pointerId !== pointerIdRef.current) {
+      return;
     }
+    // * Keep the iOS haptic gesture window alive while dragging on the button.
+    markHapticGesture();
   }, []);
 
   const percent = formatPower(progress);
@@ -320,12 +355,11 @@ export function PressureTest() {
   const onResult = phase === 'result';
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
   const showCrackPlay = phase === 'crackVideo';
-  const showCrackHold = onResult && !showSpinWheel;
-  const showCrackBleed = !showCrackPlay && !showCrackHold
-    && phase !== 'black' && phase !== 'scare'
+  const showCrackBleed = !showCrackPlay
+    && phase !== 'black' && phase !== 'scare' && phase !== 'result'
     && bleed > 0.01;
-  const crackActive = showCrackPlay || showCrackHold || showCrackBleed;
-  const crackMode = showCrackPlay ? 'play' : showCrackHold ? 'hold' : 'bleed';
+  const crackActive = showCrackPlay || showCrackBleed;
+  const crackMode = showCrackPlay ? 'play' : 'bleed';
 
   const handleSpin = useCallback(() => {
     if (!showPrizeWheel) {
@@ -388,6 +422,7 @@ export function PressureTest() {
                 onPointerDown={startHold}
                 onPointerUp={endHold}
                 onPointerCancel={endHold}
+                onPointerMove={onPointerMove}
               />
             </div>
           )}
@@ -406,7 +441,7 @@ export function PressureTest() {
         <CrackVideo
           active
           mode={crackMode}
-          bleed={showCrackPlay || showCrackHold ? 1 : bleed}
+          bleed={showCrackPlay ? 1 : bleed}
           onPlayComplete={showCrackPlay ? onCrackVideoComplete : undefined}
         />
       )}

@@ -3,6 +3,7 @@ import { JumpScare } from '../components/JumpScare';
 import { pickScareFace, pickScareScream, preloadScareAssets } from '../config/scares';
 import { playScream, stopScream } from '../game/sound';
 import { pressureConfig } from './config';
+import { hapticScare } from './haptics';
 
 interface JumpscareTriggerProps {
   active: boolean;
@@ -37,9 +38,7 @@ export function JumpscareTrigger({ active, onComplete }: JumpscareTriggerProps) 
       setFaceSrc(face);
       setPhase('face');
       playScream(scream);
-      if (navigator.vibrate) {
-        navigator.vibrate([40, 30, 80, 40, 120]);
-      }
+      hapticScare();
     }, pressureConfig.blackBeatMs);
 
     const doneTimer = window.setTimeout(() => {
