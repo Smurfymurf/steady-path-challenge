@@ -7,18 +7,17 @@ export const pressureConfig = {
   shareText:
     'I dared the Finger Challenge Pressure Test. Can your finger break it?',
   /** Freeze at this displayed percent before the scare. */
-  freezeAt: 98,
-  freezeHoldMs: 1000,
+  freezeAt: 99,
+  freezeHoldMs: 1100,
   blackBeatMs: 200,
   scareHoldMs: 950,
   /** Decay rate when finger lifts before freeze (percent per second). */
-  releaseDecayPerSec: 28,
-  /** Minimum hold before thumb-suspicion taunts can fire. */
-  thumbSuspicionMinHoldMs: 2800,
-  /** Cooldown between thumb taunts. */
-  thumbTauntCooldownMs: 4500,
-  /** Chance each evaluation window to fire a thumb taunt when suspicious. */
-  thumbTauntChance: 0.35,
+  releaseDecayPerSec: 18,
+  /** Progress where the photo crack starts emerging. */
+  crackRevealFrom: 96.5,
+  /** Progress where the photo crack is fully shown. */
+  crackRevealTo: 99,
+  crackAsset: '/assets/pressure/screen-crack.png',
 } as const;
 
 export type PressureStage =

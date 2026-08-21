@@ -1,81 +1,120 @@
+import { pressureConfig } from './config';
 import styles from './CrackOverlay.module.css';
 
 interface CrackOverlayProps {
+  /** Overall early hairline intensity (0–1). */
   intensity: number;
+  /** Photo crack reveal 0–1 (ramps hard near 98–99%). */
+  photoReveal: number;
+  /** Keep the broken-glass look over the finish/result UI. */
+  persist?: boolean;
 }
 
 /**
- * Placeholder SVG hairline cracks — opacity/length driven by intensity (0–1).
- * Swap later for a WebGL glass shader if the concept sticks.
+ * Screen-crack illusion: early SVG hairlines, then the photo crack bloom,
+ * then a locked overlay that sits above finish text with glass distortion.
  */
-export function CrackOverlay({ intensity }: CrackOverlayProps) {
-  if (intensity <= 0.01) {
+export function CrackOverlay({ intensity, photoReveal, persist = false }: CrackOverlayProps) {
+  const showHairlines = intensity > 0.02 && photoReveal < 0.85;
+  const showPhoto = photoReveal > 0.01 || (persist && intensity > 0.5);
+
+  if (!showHairlines && !showPhoto) {
     return null;
   }
 
-  const opacity = Math.min(1, intensity * 1.15);
-  const showSecond = intensity > 0.28;
-  const showThird = intensity > 0.5;
-  const showFourth = intensity > 0.72;
+  // * Expanding radial reveal from impact centre.
+  const clipPercent = Math.min(150, 8 + photoReveal * 142);
+  const photoOpacity = Math.min(1, 0.15 + photoReveal * 0.95);
+  const distort = Math.min(1, photoReveal);
 
   return (
-    <div className={styles.root} aria-hidden>
-      <svg className={styles.svg} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-        <g
-          fill="none"
-          stroke="rgba(40, 40, 45, 0.55)"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ opacity }}
-        >
-          <path
-            className={styles.line}
-            d="M50 42 L51 28 L48 18 L52 8"
-            strokeWidth={0.35 + intensity * 0.25}
-            pathLength={1}
-            strokeDasharray={1}
-            strokeDashoffset={Math.max(0, 1 - intensity * 1.4)}
-          />
-          {showSecond && (
-            <path
-              className={styles.line}
-              d="M50 44 L58 36 L68 30 L78 22"
-              strokeWidth={0.3 + intensity * 0.2}
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={Math.max(0, 1 - (intensity - 0.2) * 1.5)}
+    <div className={`${styles.root} ${persist ? styles.persist : ''}`} aria-hidden>
+      {/* * Displacement map filter warps UI sitting under this layer. */}
+      <svg className={styles.filterHost} aria-hidden>
+        <defs>
+          <filter
+            id="pressure-glass-distort"
+            x="-20%"
+            y="-20%"
+            width="140%"
+            height="140%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feImage
+              href={pressureConfig.crackAsset}
+              result="crackMap"
+              preserveAspectRatio="xMidYMid meet"
             />
-          )}
-          {showThird && (
-            <path
-              className={styles.line}
-              d="M49 45 L40 34 L32 24 L22 14"
-              strokeWidth={0.3 + intensity * 0.2}
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={Math.max(0, 1 - (intensity - 0.4) * 1.6)}
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="crackMap"
+              scale={4 + distort * 18}
+              xChannelSelector="R"
+              yChannelSelector="A"
             />
-          )}
-          {showFourth && (
-            <>
-              <path
-                d="M52 50 L62 55 L74 58 L86 70"
-                strokeWidth={0.28}
-                pathLength={1}
-                strokeDasharray={1}
-                strokeDashoffset={Math.max(0, 1 - (intensity - 0.65) * 2)}
-              />
-              <path
-                d="M47 52 L36 60 L28 72 L18 84"
-                strokeWidth={0.28}
-                pathLength={1}
-                strokeDasharray={1}
-                strokeDashoffset={Math.max(0, 1 - (intensity - 0.7) * 2)}
-              />
-            </>
-          )}
-        </g>
+          </filter>
+        </defs>
       </svg>
+
+      {showHairlines && (
+        <svg className={styles.hairlines} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+          <g
+            fill="none"
+            stroke="rgba(40, 40, 45, 0.5)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ opacity: Math.min(0.85, intensity * 1.4) * (1 - photoReveal) }}
+          >
+            <path
+              d="M50 48 L51 34 L49 22 L52 10"
+              strokeWidth={0.3 + intensity * 0.25}
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={Math.max(0, 1 - intensity * 1.5)}
+            />
+            {intensity > 0.25 && (
+              <path
+                d="M50 49 L60 40 L72 32 L84 22"
+                strokeWidth={0.28}
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={Math.max(0, 1 - (intensity - 0.15) * 1.4)}
+              />
+            )}
+            {intensity > 0.45 && (
+              <path
+                d="M49 50 L38 39 L28 28 L16 16"
+                strokeWidth={0.28}
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={Math.max(0, 1 - (intensity - 0.35) * 1.5)}
+              />
+            )}
+          </g>
+        </svg>
+      )}
+
+      {showPhoto && (
+        <div
+          className={styles.photoWrap}
+          style={{
+            opacity: persist ? 1 : photoOpacity,
+            clipPath: persist
+              ? 'circle(150% at 50% 50%)'
+              : `circle(${clipPercent}% at 50% 50%)`,
+          }}
+        >
+          <img
+            className={styles.photo}
+            src={pressureConfig.crackAsset}
+            alt=""
+            draggable={false}
+          />
+        </div>
+      )}
     </div>
   );
 }
+
+/** CSS filter id for content under the crack. */
+export const GLASS_DISTORT_FILTER = 'url(#pressure-glass-distort)';

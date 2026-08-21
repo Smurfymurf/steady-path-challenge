@@ -11,34 +11,10 @@ import {
   defaultStatusForStage,
   idleHeadline,
   pickStageTaunt,
-  pickThumbTaunt,
 } from './taunts';
-import {
-  createThumbSuspicionState,
-  ingestTouchSample,
-  shouldFireThumbTaunt,
-  type ThumbSuspicionState,
-  type TouchSample,
-} from './thumbSuspicion';
 import styles from './PressureTest.module.css';
 
 type UiPhase = PressureStage;
-
-function sampleFromPointer(event: ReactPointerEvent): TouchSample {
-  const native = event.nativeEvent as PointerEvent & {
-    radiusX?: number;
-    radiusY?: number;
-    force?: number;
-  };
-
-  return {
-    clientX: event.clientX,
-    clientY: event.clientY,
-    radiusX: native.radiusX,
-    radiusY: native.radiusY,
-    force: native.force,
-  };
-}
 
 /**
  * Standalone Pressure Test challenge — diagnostic aesthetic, scare payoff.
@@ -47,6 +23,7 @@ export function PressureTest() {
   const [phase, setPhase] = useState<UiPhase>('idle');
   const [progress, setProgress] = useState(0);
   const [crackIntensity, setCrackIntensity] = useState(0);
+  const [photoReveal, setPhotoReveal] = useState(0);
   const [status, setStatus] = useState(defaultStatusForStage('idle'));
   const [headline, setHeadline] = useState(idleHeadline());
   const [held, setHeld] = useState(false);
@@ -56,13 +33,10 @@ export function PressureTest() {
   const heldRef = useRef(false);
   const progressRef = useRef(0);
   const phaseRef = useRef<UiPhase>('idle');
-  const holdStartedAt = useRef(0);
   const holdElapsedRef = useRef(0);
   const lastFrameAt = useRef(0);
   const lastTauntAt = useRef(0);
-  const lastThumbTauntAt = useRef(0);
   const lastStageForTaunt = useRef<UiPhase>('idle');
-  const thumbRef = useRef<ThumbSuspicionState>(createThumbSuspicionState());
   const audioMarks = useRef({ tick: false, creak: false, crack: false, warning: false });
   const statusMarks = useRef({ pressureDetected: false, increaseForce: false });
   const freezeTimer = useRef<number | null>(null);
@@ -81,14 +55,13 @@ export function PressureTest() {
     progressRef.current = 0;
     phaseRef.current = 'idle';
     holdElapsedRef.current = 0;
-    thumbRef.current = createThumbSuspicionState();
     audioMarks.current = { tick: false, creak: false, crack: false, warning: false };
     statusMarks.current = { pressureDetected: false, increaseForce: false };
     lastStageForTaunt.current = 'idle';
-    lastThumbTauntAt.current = 0;
     setHeld(false);
     setProgress(0);
     setCrackIntensity(0);
+    setPhotoReveal(0);
     setPhase('idle');
     setStatus(defaultStatusForStage('idle'));
     setHeadline(idleHeadline());
@@ -106,6 +79,8 @@ export function PressureTest() {
     phaseRef.current = 'freeze';
     setPhase('freeze');
     setProgress(pressureConfig.freezeAt);
+    setCrackIntensity(1);
+    setPhotoReveal(1);
     setStatus('');
     setHeadline('');
     if (navigator.vibrate) {
@@ -120,39 +95,16 @@ export function PressureTest() {
   }, []);
 
   const onScareComplete = useCallback(() => {
-    const thumbCheating = thumbRef.current.flagged || thumbRef.current.score >= 0.55;
     setScareActive(false);
     phaseRef.current = 'result';
     setPhase('result');
+    // * Crack stays locked full after the scare.
+    setCrackIntensity(1);
+    setPhotoReveal(1);
     setResult({
-      fingerStrength: 90 + Math.floor(Math.random() * 9),
-      thumbCheating,
+      fingerStrength: 94 + Math.floor(Math.random() * 6),
       fearLevel: 100,
     });
-  }, []);
-
-  const evaluateThumb = useCallback((sample: TouchSample | null) => {
-    if (!heldRef.current) {
-      return;
-    }
-    const next = ingestTouchSample(thumbRef.current, sample);
-    thumbRef.current = next;
-    const now = performance.now();
-    const holdMs = now - holdStartedAt.current;
-    if (
-      shouldFireThumbTaunt(
-        next,
-        holdMs,
-        lastThumbTauntAt.current,
-        now,
-        pressureConfig.thumbSuspicionMinHoldMs,
-        pressureConfig.thumbTauntCooldownMs,
-        pressureConfig.thumbTauntChance,
-      )
-    ) {
-      lastThumbTauntAt.current = now;
-      setStatus(pickThumbTaunt());
-    }
   }, []);
 
   // * Main hold loop.
@@ -184,6 +136,7 @@ export function PressureTest() {
       progressRef.current = tick.progress;
       setProgress(tick.progress);
       setCrackIntensity(tick.crackIntensity);
+      setPhotoReveal(tick.photoReveal);
 
       if (tick.reachedFreeze) {
         beginFreeze();
@@ -207,8 +160,7 @@ export function PressureTest() {
           }
         }
       } else if (heldRef.current && nextStage !== 'idle') {
-        // * Occasional mid-stage taunt refresh.
-        if (now - lastTauntAt.current > 3200 && Math.random() < 0.018) {
+        if (now - lastTauntAt.current > 4200 && Math.random() < 0.014) {
           const taunt = pickStageTaunt(nextStage);
           if (taunt) {
             setStatus(taunt);
@@ -217,7 +169,6 @@ export function PressureTest() {
         }
       }
 
-      // * Early discovery beats — let the user feel they found something.
       if (heldRef.current && tick.progress >= 18 && !statusMarks.current.pressureDetected) {
         statusMarks.current.pressureDetected = true;
         setStatus('Pressure detected');
@@ -229,11 +180,6 @@ export function PressureTest() {
         lastTauntAt.current = now;
       }
 
-      // * Periodic thumb sampling while stationary.
-      if (heldRef.current && Math.random() < 0.02) {
-        evaluateThumb(null);
-      }
-
       if (!heldRef.current && tick.progress <= 0 && phaseRef.current !== 'idle') {
         phaseRef.current = 'idle';
         setPhase('idle');
@@ -241,20 +187,19 @@ export function PressureTest() {
         setHeadline(idleHeadline());
       }
 
-      // * Placeholder glass SFX at crack thresholds (once each).
-      if (tick.progress >= 76 && !audioMarks.current.tick) {
+      if (tick.progress >= 79 && !audioMarks.current.tick) {
         audioMarks.current.tick = true;
         playPressureSfx('tick');
       }
-      if (tick.progress >= 82 && !audioMarks.current.creak) {
+      if (tick.progress >= 86 && !audioMarks.current.creak) {
         audioMarks.current.creak = true;
         playPressureSfx('creak');
       }
-      if (tick.progress >= 88 && !audioMarks.current.crack) {
+      if (tick.progress >= 96.5 && !audioMarks.current.crack) {
         audioMarks.current.crack = true;
         playPressureSfx('crack');
       }
-      if (tick.progress >= 92 && !audioMarks.current.warning) {
+      if (tick.progress >= 93 && !audioMarks.current.warning) {
         audioMarks.current.warning = true;
         playPressureSfx('warning');
       }
@@ -264,7 +209,7 @@ export function PressureTest() {
     return () => {
       cancelAnimationFrame(raf);
     };
-  }, [beginFreeze, evaluateThumb]);
+  }, [beginFreeze]);
 
   const endHold = useCallback((event?: ReactPointerEvent<HTMLButtonElement>) => {
     if (pointerIdRef.current !== null && event && event.pointerId !== pointerIdRef.current) {
@@ -298,7 +243,6 @@ export function PressureTest() {
 
     heldRef.current = true;
     setHeld(true);
-    holdStartedAt.current = performance.now();
     lastFrameAt.current = 0;
     setHeadline('');
     if (progressRef.current < 1) {
@@ -307,28 +251,20 @@ export function PressureTest() {
       setPhase('discover');
     }
 
-    evaluateThumb(sampleFromPointer(event));
-
     if (navigator.vibrate) {
       navigator.vibrate(8);
     }
-  }, [evaluateThumb]);
-
-  const onPointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (!heldRef.current || event.pointerId !== pointerIdRef.current) {
-      return;
-    }
-    // * Sparse sampling while moving — keeps thumb illusion alive.
-    if (Math.random() < 0.08) {
-      evaluateThumb(sampleFromPointer(event));
-    }
-  }, [evaluateThumb]);
+  }, []);
 
   const percent = formatPower(progress);
   const showMeter = phase !== 'idle' && phase !== 'result' && phase !== 'black' && phase !== 'scare';
   const showButton = phase !== 'result' && phase !== 'black' && phase !== 'scare';
   const stressed = phase === 'stress';
   const freezing = phase === 'freeze';
+  const onResult = phase === 'result';
+  const crackPersist = onResult || freezing || photoReveal > 0.55;
+  const showCrack = phase !== 'black' && phase !== 'scare';
+  const distortContent = photoReveal > 0.35 || onResult || freezing;
 
   return (
     <div
@@ -340,12 +276,13 @@ export function PressureTest() {
         .filter(Boolean)
         .join(' ')}
     >
-      <CrackOverlay intensity={crackIntensity} />
-
-      {phase === 'result' && result ? (
-        <ResultScreen result={result} onRetry={resetRun} />
+      {onResult && result ? (
+        <ResultScreen result={result} onRetry={resetRun} distort={distortContent} />
       ) : (
-        <div className={styles.content}>
+        <div
+          className={styles.content}
+          style={distortContent ? { filter: 'url(#pressure-glass-distort)' } : undefined}
+        >
           {headline && <h1 className={styles.headline}>{headline}</h1>}
 
           <ProgressMeter percent={percent} visible={showMeter} />
@@ -365,7 +302,6 @@ export function PressureTest() {
                 onPointerDown={startHold}
                 onPointerUp={endHold}
                 onPointerCancel={endHold}
-                onPointerMove={onPointerMove}
               />
             </div>
           )}
@@ -378,6 +314,14 @@ export function PressureTest() {
             <p className={styles.freezePercent}>{pressureConfig.freezeAt}%</p>
           )}
         </div>
+      )}
+
+      {showCrack && (
+        <CrackOverlay
+          intensity={crackIntensity}
+          photoReveal={photoReveal}
+          persist={crackPersist}
+        />
       )}
 
       <JumpscareTrigger active={scareActive} onComplete={onScareComplete} />

@@ -1,5 +1,5 @@
 /**
- * Stage-keyed taunt pools. Thumb jokes live separately and fire sparingly.
+ * Stage-keyed taunt pools for the pressure illusion.
  */
 
 import type { PressureStage } from './config';
@@ -33,21 +33,6 @@ const stressTaunts = [
   'Maximum pressure',
 ] as const;
 
-export const thumbTaunts = [
-  'Hmm...',
-  "That doesn't look like a finger...",
-  'Are you cheating?',
-  "THAT'S A THUMB 😂",
-  'No thumbs allowed.',
-  "That's a thumb.",
-  'Nice try, thumb warrior.',
-  'Your thumb is cheating.',
-  'We said finger. Not a hammer.',
-  'Suspiciously large finger detected.',
-  'Are you pressing with your finger or your elbow?',
-  'Tiny finger. Big effort.',
-] as const;
-
 type TauntPool = readonly string[];
 
 const stagePools: Partial<Record<PressureStage, TauntPool>> = {
@@ -58,7 +43,6 @@ const stagePools: Partial<Record<PressureStage, TauntPool>> = {
 };
 
 let lastTaunt = '';
-let lastThumbTaunt = '';
 
 function pickWithoutImmediateRepeat(pool: TauntPool, last: string): string {
   if (pool.length === 0) {
@@ -108,12 +92,6 @@ export function pickStageTaunt(stage: PressureStage): string | null {
   }
   const next = pickWithoutImmediateRepeat(pool, lastTaunt);
   lastTaunt = next;
-  return next;
-}
-
-export function pickThumbTaunt(): string {
-  const next = pickWithoutImmediateRepeat(thumbTaunts, lastThumbTaunt);
-  lastThumbTaunt = next;
   return next;
 }
 
