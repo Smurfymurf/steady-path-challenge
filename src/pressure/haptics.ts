@@ -1,12 +1,22 @@
 /**
  * Best-effort haptics for pressure moments.
- * - Android / Chrome: Vibration API
- * - iPhone Safari: no Vibration API — pulse via checkbox `switch` toggles
- *   while a finger is still on screen (Apple only allows this during gestures)
+ *
+ * Reality check (2024+ browsers):
+ * - Chrome/Edge Android: navigator.vibrate works
+ * - Firefox (desktop + Android): Vibration API removed / no-op since FF129 — cannot vibrate
+ * - iPhone Safari: never supported vibrate — best-effort checkbox[switch] taps
+ *   only while a finger gesture is active
  */
 
 let switchInput: HTMLInputElement | null = null;
 let gestureAliveUntil = 0;
+
+function isFirefox(): boolean {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+  return /firefox/i.test(navigator.userAgent);
+}
 
 function ensureSwitch(): HTMLInputElement {
   if (switchInput && document.body.contains(switchInput)) {
@@ -55,6 +65,10 @@ function iosPulse(): void {
 }
 
 function supportsVibrateApi(): boolean {
+  // * Firefox still may expose the function in old builds, but haptics are dead.
+  if (isFirefox()) {
+    return false;
+  }
   return typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
 }
 
@@ -77,7 +91,7 @@ export function hapticBump(): void {
   window.setTimeout(() => iosPulse(), 40);
 }
 
-/** Scare / climax pattern — works on Android; iOS only if gesture still alive. */
+/** Scare / climax pattern — Android Chrome only in practice. */
 export function hapticScare(): void {
   if (supportsVibrateApi()) {
     navigator.vibrate([40, 30, 80, 40, 120]);
