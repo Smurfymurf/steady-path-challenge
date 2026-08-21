@@ -1,5 +1,5 @@
 /**
- * Stage-keyed taunt pools for the pressure illusion.
+ * Stage-keyed taunt pools — keep pushing, never “stop / warning”.
  */
 
 import type { PressureStage } from './config';
@@ -16,21 +16,27 @@ const challengeTaunts = [
   'Harder.',
   "That's all you've got?",
   'Your finger can do better than that...',
-  'Maximum pressure required.',
   'Maximum finger power required.',
+  'Push harder...',
 ] as const;
 
 const crackTaunts = [
   'Almost...',
   "Don't give up now.",
   "You're close...",
+  'Keep going — harder!',
   'I can feel the pressure increasing...',
+  'More force...',
 ] as const;
 
 const stressTaunts = [
-  'WARNING',
-  'Too much pressure',
-  'Maximum pressure',
+  'Harder!',
+  'Keep pushing!',
+  "Don't stop now...",
+  'More pressure...',
+  "You're almost there — push!",
+  'Give it everything...',
+  'Maximum force — now!',
 ] as const;
 
 type TauntPool = readonly string[];
@@ -70,9 +76,9 @@ export function defaultStatusForStage(stage: PressureStage): string {
     case 'challenge':
       return 'Increase force...';
     case 'cracks':
-      return 'Almost...';
+      return 'Keep pushing...';
     case 'stress':
-      return 'WARNING';
+      return 'Harder!';
     case 'freeze':
       return '';
     case 'black':

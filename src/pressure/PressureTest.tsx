@@ -27,7 +27,6 @@ type UiPhase = PressureStage;
 export function PressureTest() {
   const [phase, setPhase] = useState<UiPhase>('idle');
   const [progress, setProgress] = useState(0);
-  const [crackIntensity, setCrackIntensity] = useState(0);
   const [photoReveal, setPhotoReveal] = useState(0);
   const [status, setStatus] = useState(defaultStatusForStage('idle'));
   const [headline, setHeadline] = useState(idleHeadline());
@@ -96,7 +95,6 @@ export function PressureTest() {
     lastStageForTaunt.current = 'idle';
     setHeld(false);
     setProgress(0);
-    setCrackIntensity(0);
     setPhotoReveal(0);
     setPhase('idle');
     setStatus(defaultStatusForStage('idle'));
@@ -116,7 +114,6 @@ export function PressureTest() {
     phaseRef.current = 'freeze';
     setPhase('freeze');
     setProgress(pressureConfig.freezeAt);
-    setCrackIntensity(1);
     setPhotoReveal(1);
     setStatus('');
     setHeadline('');
@@ -136,7 +133,6 @@ export function PressureTest() {
     phaseRef.current = 'result';
     setPhase('result');
     // * Crack stays locked full after the scare.
-    setCrackIntensity(1);
     setPhotoReveal(1);
     setResult({
       fingerStrength: 94 + Math.floor(Math.random() * 6),
@@ -172,7 +168,6 @@ export function PressureTest() {
 
       progressRef.current = tick.progress;
       setProgress(tick.progress);
-      setCrackIntensity(tick.crackIntensity);
       setPhotoReveal(tick.photoReveal);
 
       if (tick.reachedFreeze) {
@@ -197,7 +192,10 @@ export function PressureTest() {
           }
         }
       } else if (heldRef.current && nextStage !== 'idle') {
-        if (now - lastTauntAt.current > 4200 && Math.random() < 0.014) {
+        // * Keep pushing — refresh taunts more often in the late grind.
+        const gap = nextStage === 'stress' || nextStage === 'cracks' ? 2200 : 4200;
+        const chance = nextStage === 'stress' ? 0.03 : 0.014;
+        if (now - lastTauntAt.current > gap && Math.random() < chance) {
           const taunt = pickStageTaunt(nextStage);
           if (taunt) {
             setStatus(taunt);
@@ -237,8 +235,9 @@ export function PressureTest() {
         playPressureSfx('crack');
       }
       if (tick.progress >= 93 && !audioMarks.current.warning) {
+        // * Extra tick — avoid a "warning alarm" that suggests letting go.
         audioMarks.current.warning = true;
-        playPressureSfx('warning');
+        playPressureSfx('tick');
       }
     };
 
@@ -299,8 +298,8 @@ export function PressureTest() {
   const stressed = phase === 'stress';
   const freezing = phase === 'freeze';
   const onResult = phase === 'result';
-  const crackPersist = onResult || freezing || photoReveal > 0.55;
-  const showCrack = phase !== 'black' && phase !== 'scare' && !showSpinWheel;
+  const showButtonCrack = showButton && photoReveal > 0.01;
+  const showScreenCrack = (onResult || freezing) && !showSpinWheel;
   const distortContent = !showSpinWheel && (photoReveal > 0.35 || onResult || freezing);
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
 
@@ -355,13 +354,20 @@ export function PressureTest() {
           <ProgressMeter percent={percent} visible={showMeter} />
 
           {status && (
-            <p className={[styles.status, phase === 'stress' ? styles.statusWarn : ''].filter(Boolean).join(' ')}>
+            <p className={styles.status}>
               {status}
             </p>
           )}
 
           {showButton && (
             <div className={styles.buttonWrap}>
+              {showButtonCrack && (
+                <CrackOverlay
+                  photoReveal={photoReveal}
+                  variant="button"
+                  revealOverButton={!held || freezing}
+                />
+              )}
               <PressureButton
                 pressed={held}
                 stage={phase}
@@ -383,11 +389,11 @@ export function PressureTest() {
         </div>
       )}
 
-      {showCrack && (
+      {showScreenCrack && (
         <CrackOverlay
-          intensity={crackIntensity}
-          photoReveal={photoReveal}
-          persist={crackPersist}
+          photoReveal={1}
+          persist
+          variant="screen"
         />
       )}
 

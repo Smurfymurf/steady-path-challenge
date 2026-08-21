@@ -24,35 +24,35 @@ export interface PressureTickResult {
 
 /**
  * Base fill rate (% per second) while held.
- * Rough continuous hold: ~50–70s to freeze if they never release.
+ * Tuned ~20% easier than the previous grind; still a real hold to finish.
  */
 function baseRate(progress: number): number {
   if (progress < 25) {
-    return 10;
+    return 12;
   }
   if (progress < 40) {
-    return 6.5;
+    return 7.8;
   }
   if (progress < 55) {
-    return 2.4;
+    return 2.88;
   }
   if (progress < 70) {
-    return 1.5;
+    return 1.8;
   }
   if (progress < 80) {
-    return 0.85;
+    return 1.02;
   }
   if (progress < 90) {
-    return 0.55;
+    return 0.66;
   }
   if (progress < 95) {
-    return 0.32;
+    return 0.384;
   }
   if (progress < 97.5) {
-    return 0.18;
+    return 0.216;
   }
   // * Final grind — feels stuck without actually stopping.
-  return 0.09;
+  return 0.108;
 }
 
 /**

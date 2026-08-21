@@ -1,5 +1,6 @@
 .button {
   position: relative;
+  z-index: 4;
   width: min(42vw, 168px);
   height: min(42vw, 168px);
   border-radius: 50%;

@@ -62,8 +62,11 @@
 }
 
 .buttonWrap {
+  position: relative;
   margin-top: 0.5rem;
   touch-action: none;
+  /* * Stack the button above the crack so the finger covers the glass. */
+  isolation: isolate;
 }
 
 .freezePercent {

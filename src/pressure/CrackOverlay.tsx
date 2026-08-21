@@ -2,34 +2,51 @@ import { pressureConfig } from './config';
 import styles from './CrackOverlay.module.css';
 
 interface CrackOverlayProps {
-  /** Overall early hairline intensity (0–1). */
-  intensity: number;
   /** Photo crack reveal 0–1 (ramps hard near 98–99%). */
   photoReveal: number;
   /** Keep the broken-glass look over the finish/result UI. */
   persist?: boolean;
+  /**
+   * `button` — small crack centred on the hold target (hidden under the finger).
+   * `screen` — larger plate for the finish / result overlay.
+   */
+  variant?: 'button' | 'screen';
+  /** When true, button crack renders above the button (finger lifted). */
+  revealOverButton?: boolean;
 }
 
 /**
- * Screen-crack illusion: early SVG hairlines, then the photo crack bloom,
- * then a locked overlay that sits above finish text with glass distortion.
+ * Photo crack only — no SVG hairlines.
+ * Button-sized while holding so the finger hides it until lift-off.
  */
-export function CrackOverlay({ intensity, photoReveal, persist = false }: CrackOverlayProps) {
-  const showHairlines = intensity > 0.02 && photoReveal < 0.85;
-  const showPhoto = photoReveal > 0.01 || (persist && intensity > 0.5);
+export function CrackOverlay({
+  photoReveal,
+  persist = false,
+  variant = 'button',
+  revealOverButton = false,
+}: CrackOverlayProps) {
+  const showPhoto = photoReveal > 0.01 || persist;
 
-  if (!showHairlines && !showPhoto) {
+  if (!showPhoto) {
     return null;
   }
 
-  // * Expanding radial reveal from impact centre.
-  const clipPercent = Math.min(150, 8 + photoReveal * 142);
-  const photoOpacity = Math.min(1, 0.15 + photoReveal * 0.95);
-  const distort = Math.min(1, photoReveal);
+  const clipPercent = Math.min(150, 12 + photoReveal * 140);
+  const photoOpacity = persist ? 1 : Math.min(1, 0.2 + photoReveal * 0.9);
+  const distort = persist ? 1 : Math.min(1, photoReveal);
 
   return (
-    <div className={`${styles.root} ${persist ? styles.persist : ''}`} aria-hidden>
-      {/* * Displacement map filter warps UI sitting under this layer. */}
+    <div
+      className={[
+        styles.root,
+        variant === 'button' ? styles.buttonAnchor : styles.screenAnchor,
+        variant === 'button' && revealOverButton ? styles.buttonAnchorVisible : '',
+        persist ? styles.persist : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-hidden
+    >
       <svg className={styles.filterHost} aria-hidden>
         <defs>
           <filter
@@ -48,7 +65,7 @@ export function CrackOverlay({ intensity, photoReveal, persist = false }: CrackO
             <feDisplacementMap
               in="SourceGraphic"
               in2="crackMap"
-              scale={4 + distort * 18}
+              scale={3 + distort * 14}
               xChannelSelector="R"
               yChannelSelector="A"
             />
@@ -56,65 +73,22 @@ export function CrackOverlay({ intensity, photoReveal, persist = false }: CrackO
         </defs>
       </svg>
 
-      {showHairlines && (
-        <svg className={styles.hairlines} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-          <g
-            fill="none"
-            stroke="rgba(40, 40, 45, 0.5)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ opacity: Math.min(0.85, intensity * 1.4) * (1 - photoReveal) }}
-          >
-            <path
-              d="M50 48 L51 34 L49 22 L52 10"
-              strokeWidth={0.3 + intensity * 0.25}
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={Math.max(0, 1 - intensity * 1.5)}
-            />
-            {intensity > 0.25 && (
-              <path
-                d="M50 49 L60 40 L72 32 L84 22"
-                strokeWidth={0.28}
-                pathLength={1}
-                strokeDasharray={1}
-                strokeDashoffset={Math.max(0, 1 - (intensity - 0.15) * 1.4)}
-              />
-            )}
-            {intensity > 0.45 && (
-              <path
-                d="M49 50 L38 39 L28 28 L16 16"
-                strokeWidth={0.28}
-                pathLength={1}
-                strokeDasharray={1}
-                strokeDashoffset={Math.max(0, 1 - (intensity - 0.35) * 1.5)}
-              />
-            )}
-          </g>
-        </svg>
-      )}
-
-      {showPhoto && (
-        <div
-          className={styles.photoWrap}
-          style={{
-            opacity: persist ? 1 : photoOpacity,
-            clipPath: persist
-              ? 'circle(150% at 50% 50%)'
-              : `circle(${clipPercent}% at 50% 50%)`,
-          }}
-        >
-          <img
-            className={styles.photo}
-            src={pressureConfig.crackAsset}
-            alt=""
-            draggable={false}
-          />
-        </div>
-      )}
+      <div
+        className={styles.photoWrap}
+        style={{
+          opacity: photoOpacity,
+          clipPath: persist
+            ? 'circle(150% at 50% 50%)'
+            : `circle(${clipPercent}% at 50% 50%)`,
+        }}
+      >
+        <img
+          className={styles.photo}
+          src={pressureConfig.crackAsset}
+          alt=""
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }
-
-/** CSS filter id for content under the crack. */
-export const GLASS_DISTORT_FILTER = 'url(#pressure-glass-distort)';
