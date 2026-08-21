@@ -1,0 +1,48 @@
+.root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.play {
+  z-index: 80;
+  animation: crack-fade-in 0.18s ease-out both;
+}
+
+.hold {
+  /* * Sit above end-screen copy so the glass stays “broken”. */
+  z-index: 55;
+  background: transparent;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+.hold .video {
+  /* * Keep the broken frame visible without crushing end-screen readability. */
+  opacity: 0.62;
+}
+
+@keyframes crack-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play {
+    animation: none;
+  }
+}

@@ -15,10 +15,6 @@ export interface PressureTickInput {
 export interface PressureTickResult {
   progress: number;
   stage: PressureStage;
-  /** 0–1 overall crack overlay strength (hairlines + photo). */
-  crackIntensity: number;
-  /** 0–1 photo crack reveal (mostly 96.5–99%). */
-  photoReveal: number;
   reachedFreeze: boolean;
 }
 
@@ -90,8 +86,6 @@ export function tickPressure(input: PressureTickInput): PressureTickResult {
     return {
       progress: next,
       stage: stageFromProgress(next),
-      crackIntensity: crackIntensityFor(next),
-      photoReveal: photoRevealFor(next),
       reachedFreeze: false,
     };
   }
@@ -100,8 +94,6 @@ export function tickPressure(input: PressureTickInput): PressureTickResult {
     return {
       progress: pressureConfig.freezeAt,
       stage: 'freeze',
-      crackIntensity: 1,
-      photoReveal: 1,
       reachedFreeze: true,
     };
   }
@@ -112,7 +104,6 @@ export function tickPressure(input: PressureTickInput): PressureTickResult {
   if (next > pressureConfig.freezeAt) {
     next = pressureConfig.freezeAt;
   }
-  // * Soft floor while held after discovery — can still dip a little.
   if (progress >= 40) {
     next = Math.max(next, progress - 1.1 * dt);
   }
@@ -122,35 +113,8 @@ export function tickPressure(input: PressureTickInput): PressureTickResult {
   return {
     progress: next,
     stage: reachedFreeze ? 'freeze' : stageFromProgress(next),
-    crackIntensity: crackIntensityFor(next),
-    photoReveal: photoRevealFor(next),
     reachedFreeze,
   };
-}
-
-export function crackIntensityFor(progress: number): number {
-  if (progress < 78) {
-    return 0;
-  }
-  if (progress < 90) {
-    return ((progress - 78) / 12) * 0.35;
-  }
-  if (progress < pressureConfig.crackRevealFrom) {
-    return 0.35 + ((progress - 90) / (pressureConfig.crackRevealFrom - 90)) * 0.25;
-  }
-  return 0.6 + photoRevealFor(progress) * 0.4;
-}
-
-/** Gradual photo crack reveal concentrated in the final 96.5–99% window. */
-export function photoRevealFor(progress: number): number {
-  const { crackRevealFrom, crackRevealTo, freezeAt } = pressureConfig;
-  if (progress < crackRevealFrom) {
-    return 0;
-  }
-  if (progress >= freezeAt || progress >= crackRevealTo) {
-    return 1;
-  }
-  return (progress - crackRevealFrom) / (crackRevealTo - crackRevealFrom);
 }
 
 export function formatPower(progress: number): number {

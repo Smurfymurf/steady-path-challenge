@@ -6,7 +6,8 @@ import { fetchWheelForGeo, type LiveWheelConfig } from '../game/liveOffers';
 import { playSfx } from '../game/sound';
 import { playPressureSfx, setPressureAudioEnabled, unlockPressureAudio } from './audio';
 import { pressureConfig, type PressureStage } from './config';
-import { CrackOverlay } from './CrackOverlay';
+import { CrackVideo } from './CrackVideo';
+import { preloadCrackVideo } from './preloadCrackVideo';
 import { formatPower, tickPressure } from './fakePressure';
 import { JumpscareTrigger } from './JumpscareTrigger';
 import { PressureButton } from './PressureButton';
@@ -27,7 +28,6 @@ type UiPhase = PressureStage;
 export function PressureTest() {
   const [phase, setPhase] = useState<UiPhase>('idle');
   const [progress, setProgress] = useState(0);
-  const [photoReveal, setPhotoReveal] = useState(0);
   const [status, setStatus] = useState(defaultStatusForStage('idle'));
   const [headline, setHeadline] = useState(idleHeadline());
   const [held, setHeld] = useState(false);
@@ -53,6 +53,7 @@ export function PressureTest() {
 
   useEffect(() => {
     setPressureAudioEnabled(true);
+    preloadCrackVideo();
   }, []);
 
   useEffect(() => {
@@ -95,7 +96,6 @@ export function PressureTest() {
     lastStageForTaunt.current = 'idle';
     setHeld(false);
     setProgress(0);
-    setPhotoReveal(0);
     setPhase('idle');
     setStatus(defaultStatusForStage('idle'));
     setHeadline(idleHeadline());
@@ -106,7 +106,13 @@ export function PressureTest() {
   }, []);
 
   const beginFreeze = useCallback(() => {
-    if (phaseRef.current === 'freeze' || phaseRef.current === 'black' || phaseRef.current === 'scare') {
+    if (
+      phaseRef.current === 'freeze'
+      || phaseRef.current === 'crackVideo'
+      || phaseRef.current === 'black'
+      || phaseRef.current === 'scare'
+      || phaseRef.current === 'result'
+    ) {
       return;
     }
     heldRef.current = false;
@@ -114,26 +120,33 @@ export function PressureTest() {
     phaseRef.current = 'freeze';
     setPhase('freeze');
     setProgress(pressureConfig.freezeAt);
-    setPhotoReveal(1);
     setStatus('');
     setHeadline('');
     if (navigator.vibrate) {
       navigator.vibrate(0);
     }
 
+    // * Brief 99% beat, then play the cracked-screen video.
     freezeTimer.current = window.setTimeout(() => {
-      phaseRef.current = 'black';
-      setPhase('black');
-      setScareActive(true);
+      phaseRef.current = 'crackVideo';
+      setPhase('crackVideo');
+      playPressureSfx('crack');
     }, pressureConfig.freezeHoldMs);
+  }, []);
+
+  const onCrackVideoComplete = useCallback(() => {
+    if (phaseRef.current !== 'crackVideo') {
+      return;
+    }
+    phaseRef.current = 'black';
+    setPhase('black');
+    setScareActive(true);
   }, []);
 
   const onScareComplete = useCallback(() => {
     setScareActive(false);
     phaseRef.current = 'result';
     setPhase('result');
-    // * Crack stays locked full after the scare.
-    setPhotoReveal(1);
     setResult({
       fingerStrength: 94 + Math.floor(Math.random() * 6),
       fearLevel: 100,
@@ -146,8 +159,13 @@ export function PressureTest() {
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (phaseRef.current === 'freeze' || phaseRef.current === 'black'
-        || phaseRef.current === 'scare' || phaseRef.current === 'result') {
+      if (
+        phaseRef.current === 'freeze'
+        || phaseRef.current === 'crackVideo'
+        || phaseRef.current === 'black'
+        || phaseRef.current === 'scare'
+        || phaseRef.current === 'result'
+      ) {
         return;
       }
 
@@ -168,7 +186,6 @@ export function PressureTest() {
 
       progressRef.current = tick.progress;
       setProgress(tick.progress);
-      setPhotoReveal(tick.photoReveal);
 
       if (tick.reachedFreeze) {
         beginFreeze();
@@ -192,7 +209,6 @@ export function PressureTest() {
           }
         }
       } else if (heldRef.current && nextStage !== 'idle') {
-        // * Keep pushing — refresh taunts more often in the late grind.
         const gap = nextStage === 'stress' || nextStage === 'cracks' ? 2200 : 4200;
         const chance = nextStage === 'stress' ? 0.03 : 0.014;
         if (now - lastTauntAt.current > gap && Math.random() < chance) {
@@ -230,12 +246,7 @@ export function PressureTest() {
         audioMarks.current.creak = true;
         playPressureSfx('creak');
       }
-      if (tick.progress >= 96.5 && !audioMarks.current.crack) {
-        audioMarks.current.crack = true;
-        playPressureSfx('crack');
-      }
       if (tick.progress >= 93 && !audioMarks.current.warning) {
-        // * Extra tick — avoid a "warning alarm" that suggests letting go.
         audioMarks.current.warning = true;
         playPressureSfx('tick');
       }
@@ -264,8 +275,13 @@ export function PressureTest() {
   }, []);
 
   const startHold = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (phaseRef.current === 'freeze' || phaseRef.current === 'black'
-      || phaseRef.current === 'scare' || phaseRef.current === 'result') {
+    if (
+      phaseRef.current === 'freeze'
+      || phaseRef.current === 'crackVideo'
+      || phaseRef.current === 'black'
+      || phaseRef.current === 'scare'
+      || phaseRef.current === 'result'
+    ) {
       return;
     }
     event.preventDefault();
@@ -293,14 +309,16 @@ export function PressureTest() {
   }, []);
 
   const percent = formatPower(progress);
-  const showMeter = phase !== 'idle' && phase !== 'result' && phase !== 'black' && phase !== 'scare';
-  const showButton = phase !== 'result' && phase !== 'black' && phase !== 'scare';
+  const showMeter = phase !== 'idle' && phase !== 'result' && phase !== 'black'
+    && phase !== 'scare' && phase !== 'crackVideo';
+  const showButton = phase !== 'result' && phase !== 'black' && phase !== 'scare'
+    && phase !== 'crackVideo';
   const stressed = phase === 'stress';
   const freezing = phase === 'freeze';
   const onResult = phase === 'result';
-  const showButtonCrack = showButton && photoReveal > 0.01;
-  const showScreenCrack = (onResult || freezing) && !showSpinWheel;
   const showPrizeWheel = isPrizeWheelGeo(offerGeo) || isPrizeWheelGeo(countryCode);
+  const showCrackPlay = phase === 'crackVideo';
+  const showCrackHold = onResult && !showSpinWheel;
 
   const handleSpin = useCallback(() => {
     if (!showPrizeWheel) {
@@ -356,13 +374,6 @@ export function PressureTest() {
 
           {showButton && (
             <div className={styles.buttonWrap}>
-              {showButtonCrack && (
-                <CrackOverlay
-                  photoReveal={photoReveal}
-                  variant="button"
-                  revealOverButton={!held || freezing}
-                />
-              )}
               <PressureButton
                 pressed={held}
                 stage={phase}
@@ -384,11 +395,11 @@ export function PressureTest() {
         </div>
       )}
 
-      {showScreenCrack && (
-        <CrackOverlay
-          photoReveal={1}
-          persist
-          variant="screen"
+      {(showCrackPlay || showCrackHold) && (
+        <CrackVideo
+          active
+          mode={showCrackPlay ? 'play' : 'hold'}
+          onPlayComplete={showCrackPlay ? onCrackVideoComplete : undefined}
         />
       )}
 
