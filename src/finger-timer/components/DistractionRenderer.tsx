@@ -65,94 +65,73 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
   
   // * Render standard distractions.
   switch (event.id) {
-    case 'fake-battery':
-      return <Distractions.FakeBattery />;
-    case 'pigeon':
-      return <Distractions.Pigeon />;
-    case 'screen-shake':
-      return <Distractions.ScreenShake />;
-    case 'wrong-countdown':
-      return <Distractions.WrongCountdown />;
-    case 'motivational-coach':
-      return <Distractions.MotivationalCoach />;
-    case 'finger-inspection':
-      return <Distractions.FingerInspection />;
-    case 'fake-achievement':
-      return <Distractions.FakeAchievement />;
-    case 'emergency-question':
-      return <Distractions.EmergencyQuestion />;
-    case 'mosquito':
-      return <Distractions.Mosquito />;
-    case 'spider':
-      return <Distractions.Spider />;
-    case 'fake-crack':
-      return <Distractions.FakeCrack />;
-    case 'bouncing-emoji':
-      return <Distractions.BouncingEmoji />;
-    case 'upside-down':
-      return <Distractions.UpsideDown />;
-    case 'fake-loading':
-      return <Distractions.FakeLoading />;
-    case 'unhelpful-advice':
-      return <Distractions.UnhelpfulAdvice />;
-    case 'suspicious-button':
-      return <Distractions.SuspiciousButton />;
-    case 'tiny-horse':
-      return <Distractions.TinyHorse />;
-    case 'weather':
-      return <Distractions.Weather />;
-    case 'screen-shrink':
-      return <Distractions.ScreenShrink />;
-    case 'fake-celebration':
-      return <Distractions.FakeCelebration />;
-    case 'day-night-cycle':
-      return <Distractions.DayNightCycle />;
-    case 'fake-timer':
-      return <Distractions.FakeTimer />;
-    case 'anticipation-buildup':
-      return <Distractions.AnticipationBuildup />;
-    case 'false-safety':
-      return <Distractions.FalseSafety />;
+    case 'random-numbers':
+      return <Distractions.RandomNumbers />;
     case 'youre-counting':
-      return <Distractions.YoureCounting />;
     case 'stop-counting':
-      return <Distractions.StopCounting />;
-    case 'almost-there':
-      return <Distractions.AlmostThere />;
-    case 'way-too-early':
-      return <Distractions.WayTooEarly />;
-    case 'finger-getting-tired':
-      return <Distractions.FingerGettingTired />;
-    case 'overthinking':
-      return <Distractions.Overthinking />;
-    case 'friend-did-better':
-      return <Distractions.FriendDidBetter />;
-    case 'fake-vibration':
-      return <Distractions.FakeVibration />;
-    case 'probably-wrong':
-      return <Distractions.ProbablyWrong />;
-    case 'time-paradox':
-      return <Distractions.TimeParadox />;
-    case 'swipe-notification':
-      return <Distractions.SwipeNotification />;
-    case 'math-problem':
-      return <Distractions.MathProblem />;
-    case 'distracted-yet':
-      return <Distractions.DistractedYet />;
+      return <Distractions.YoureCounting />;
+    case 'wrong-time':
+      return <Distractions.WrongTime />;
+    case 'distraction-1':
+      return <Distractions.Distraction1 />;
+    case 'distraction-2':
+      return <Distractions.Distraction2 />;
+    case 'distraction-3':
+      return <Distractions.Distraction3 />;
+    case 'distraction-4':
+      return <Distractions.Distraction4 />;
+    case 'distraction-5':
+      return <Distractions.Distraction5 />;
+    case 'distraction-6':
+      return <Distractions.Distraction6 />;
+    case 'distraction-7':
+      return <Distractions.Distraction7 />;
+    case 'distraction-8':
+      return <Distractions.Distraction8 />;
+    case 'distraction-9':
+      return <Distractions.Distraction9 />;
+    case 'distraction-10':
+      return <Distractions.Distraction10 />;
+    case 'distraction-11':
+      return <Distractions.Distraction11 />;
+    case 'distraction-12':
+      return <Distractions.Distraction12 />;
     case 'release-now':
       return <Distractions.ReleaseNow />;
-    case 'seconds-feel-longer':
-      return <Distractions.SecondsFeelLonger />;
-    case 'already-failed':
-      return <Distractions.AlreadyFailed />;
-    case 'screen-dim':
-      return <Distractions.ScreenDim />;
+    case 'almost-there':
+      return <Distractions.AlmostThere />;
     case 'fake-finish':
-      return <Distractions.FakeFinish />;
-    case 'zoom-in':
-      return <Distractions.ZoomIn />;
-    case 'notification-spam':
-      return <Distractions.NotificationSpam />;
+      return <Distractions.TimeUp />;
+    case 'fake-battery':
+      return <Distractions.FakeBattery />;
+    case 'fake-message':
+    case 'swipe-notification':
+      return <Distractions.FakeMessage />;
+    case 'pigeon':
+      return <Distractions.Pigeon />;
+    case 'tiny-horse':
+      return <Distractions.TinyHorse />;
+    case 'wrong-countdown':
+      return <Distractions.WrongCountdown />;
+    
+    // Fallback mappings
+    case 'way-too-early':
+    case 'finger-getting-tired':
+    case 'overthinking':
+    case 'friend-did-better':
+    case 'probably-wrong':
+    case 'time-paradox':
+    case 'math-problem':
+    case 'distracted-yet':
+    case 'seconds-feel-longer':
+    case 'already-failed':
+    case 'motivational-coach':
+    case 'finger-inspection':
+    case 'emergency-question':
+    case 'unhelpful-advice':
+    case 'fake-timer':
+      return <Distractions.YoureCounting />;
+    
     default:
       return null;
   }

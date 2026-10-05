@@ -12,12 +12,13 @@
 
 .instructions {
   position: absolute;
-  top: 50%;
+  top: 80px;
   left: 50%;
-  transform: translate(-50%, -160px);
+  transform: translateX(-50%);
   text-align: center;
   width: 90%;
   max-width: 500px;
+  z-index: 10;
   opacity: 0;
   animation: instructionsFadeIn 0.6s ease-out 0.2s forwards;
 }

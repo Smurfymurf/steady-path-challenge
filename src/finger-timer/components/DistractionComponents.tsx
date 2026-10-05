@@ -1,18 +1,269 @@
 /**
- * Premium distraction components - positioned away from center circle.
+ * Ultra-polished distraction components with genuinely funny content.
  */
 
 import { useEffect, useState } from 'react';
 import styles from './Distractions.module.css';
 
+export function RandomNumbers() {
+  const [numbers, setNumbers] = useState<Array<{ id: number; value: number; x: number; y: number }>>([]);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newNumber = {
+        id: Date.now(),
+        value: Math.floor(Math.random() * 60) + 1,
+        x: Math.random() * 80 + 10,
+        y: Math.random() * 60 + 20,
+      };
+      setNumbers(prev => [...prev, newNumber].slice(-4));
+    }, 800);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div className={styles.randomNumbers}>
+      {numbers.map(num => (
+        <div
+          key={num.id}
+          className={styles.floatingNumber}
+          style={{
+            left: `${num.x}%`,
+            top: `${num.y}%`,
+          }}
+        >
+          {num.value}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function YoureCounting() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Stop counting in your head</p>
+        <p className={styles.tauntSecondary}>We can hear you</p>
+      </div>
+    </div>
+  );
+}
+
+export function WrongTime() {
+  const [time, setTime] = useState(3);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTime(Math.floor(Math.random() * 30) + 5);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.fakeTimeCard}>
+        <div className={styles.fakeTimeNumber}>{time}</div>
+        <div className={styles.fakeTimeLabel}>seconds elapsed</div>
+        <div className={styles.fakeTimeDisclaimer}>probably not</div>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction1() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Your internal clock is broken</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction2() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>This is taking forever</p>
+        <p className={styles.tauntSecondary}>Or is it?</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction3() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>You're going to be way off</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction4() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Fun fact: You're bad at this</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction5() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Time doesn't exist</p>
+        <p className={styles.tauntSecondary}>But you're still losing</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction6() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Everyone else got 0.01</p>
+        <p className={styles.tauntSecondary}>Just saying</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction7() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Your finger looks nervous</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction8() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>What if you already lost?</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction9() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>One Mississippi...</p>
+        <p className={styles.tauntSecondary}>Wait, which number were you on?</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction10() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Is this 10 seconds?</p>
+        <p className={styles.tauntSecondary}>Definitely not</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction11() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>Don't think about elephants</p>
+        <p className={styles.tauntSecondary}>Or seconds</p>
+      </div>
+    </div>
+  );
+}
+
+export function Distraction12() {
+  return (
+    <div className={styles.tauntTop}>
+      <div className={styles.tauntCard}>
+        <p className={styles.tauntPrimary}>You're overthinking this</p>
+        <p className={styles.tauntSecondary}>Or underthinking it</p>
+      </div>
+    </div>
+  );
+}
+
+export function ReleaseNow() {
+  return (
+    <div className={styles.urgentBottom}>
+      <div className={styles.urgentCard}>
+        <div className={styles.urgentText}>RELEASE NOW</div>
+        <div className={styles.urgentSubtext}>jk don't</div>
+      </div>
+    </div>
+  );
+}
+
+export function AlmostThere() {
+  return (
+    <div className={styles.urgentBottom}>
+      <div className={styles.urgentCard}>
+        <div className={styles.urgentText}>ALMOST THERE</div>
+        <div className={styles.urgentSubtext}>probably not though</div>
+      </div>
+    </div>
+  );
+}
+
+export function TimeUp() {
+  return (
+    <div className={styles.fakeFinish}>
+      <div className={styles.finishCard}>
+        <div className={styles.finishText}>TIME'S UP</div>
+        <div className={styles.finishSubtext}>gotcha</div>
+      </div>
+    </div>
+  );
+}
+
 export function FakeBattery() {
   return (
-    <div className={styles.fakeBattery}>
-      <div className={styles.batteryCard}>
-        <div className={styles.batteryIcon}>
-          <div className={styles.batteryLevel} />
+    <div className={styles.notificationTop}>
+      <div className={styles.notificationCard}>
+        <div className={styles.notificationIcon}>🔋</div>
+        <div className={styles.notificationText}>
+          <div className={styles.notificationTitle}>Battery Low</div>
+          <div className={styles.notificationBody}>1% remaining</div>
         </div>
-        <span className={styles.batteryText}>BATTERY 1%</span>
+      </div>
+    </div>
+  );
+}
+
+export function FakeMessage() {
+  const messages = [
+    { title: "Mom", body: "Are you still touching your phone?" },
+    { title: "Boss", body: "We need to talk" },
+    { title: "Ex", body: "Hey" },
+    { title: "Bank", body: "Unusual activity detected" },
+  ];
+  
+  const msg = messages[Math.floor(Math.random() * messages.length)]!;
+  
+  return (
+    <div className={styles.notificationTop}>
+      <div className={styles.notificationCard}>
+        <div className={styles.notificationIcon}>💬</div>
+        <div className={styles.notificationText}>
+          <div className={styles.notificationTitle}>{msg.title}</div>
+          <div className={styles.notificationBody}>{msg.body}</div>
+        </div>
       </div>
     </div>
   );
@@ -24,181 +275,12 @@ export function Pigeon() {
       <div className={styles.pigeon}>
         <div className={styles.pigeonEmoji}>🐦</div>
       </div>
-      <div className={styles.pigeonCaption}>
-        <p className={styles.pigeonText}>Do not acknowledge the pigeon.</p>
-      </div>
-    </>
-  );
-}
-
-export function WrongCountdown() {
-  const [count, setCount] = useState(5);
-  
-  useEffect(() => {
-    const numbers = [5, 4, 3, 2, 17, 42];
-    let index = 0;
-    
-    const timer = setInterval(() => {
-      index += 1;
-      if (index < numbers.length) {
-        setCount(numbers[index]!);
-      }
-    }, 600);
-    
-    return () => clearInterval(timer);
-  }, []);
-  
-  return (
-    <div className={styles.wrongCountdown}>
-      <div className={styles.countdownNumber}>{count}</div>
-    </div>
-  );
-}
-
-export function YoureCounting() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>You're counting in your head,</p>
-      <p className={styles.tauntSubtext}>aren't you?</p>
-    </div>
-  );
-}
-
-export function StopCounting() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Stop counting.</p>
-    </div>
-  );
-}
-
-export function AlmostThere() {
-  return (
-    <div className={styles.urgentTaunt}>
-      <p className={styles.urgentTextMessage}>ALMOST THERE!</p>
-      <p className={styles.urgentSubtext}>...or are you?</p>
-    </div>
-  );
-}
-
-export function WayTooEarly() {
-  return (
-    <div className={styles.urgentTaunt}>
-      <p className={styles.urgentTextMessage}>WAY TOO EARLY</p>
-    </div>
-  );
-}
-
-export function FingerGettingTired() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Your finger is getting tired.</p>
-    </div>
-  );
-}
-
-export function Overthinking() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>You're overthinking this.</p>
-    </div>
-  );
-}
-
-export function FriendDidBetter() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Your friend got 0.032 seconds.</p>
-      <p className={styles.tauntSubtext}>Just saying.</p>
-    </div>
-  );
-}
-
-export function ProbablyWrong() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>You're probably way off by now.</p>
-    </div>
-  );
-}
-
-export function TimeParadox() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Did a second just feel longer?</p>
-      <p className={styles.tauntSubtext}>Or shorter?</p>
-    </div>
-  );
-}
-
-export function SwipeNotification() {
-  return (
-    <div className={styles.fakeNotification}>
-      <div className={styles.notificationCard}>
-        <div className={styles.notificationIcon}>📱</div>
-        <div className={styles.notificationContent}>
-          <div className={styles.notificationTitle}>New Message</div>
-          <div className={styles.notificationBody}>Why are you touching your screen?</div>
+      <div className={styles.tauntBottom}>
+        <div className={styles.captionCard}>
+          <p className={styles.captionText}>ignore the pigeon</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-export function MathProblem() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Quick: What's 17 × 23?</p>
-      <p className={styles.tauntSubtext}>Just kidding. Keep holding.</p>
-    </div>
-  );
-}
-
-export function DistractedYet() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Distracted yet?</p>
-    </div>
-  );
-}
-
-export function ReleaseNow() {
-  return (
-    <div className={styles.urgentCommand}>
-      <p className={styles.commandTextMessage}>RELEASE NOW</p>
-      <p className={styles.commandSubtext}>(Don't actually)</p>
-    </div>
-  );
-}
-
-export function SecondsFeelLonger() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Seconds feel longer when you're</p>
-      <p className={styles.tauntSubtext}>focused on them.</p>
-    </div>
-  );
-}
-
-export function AlreadyFailed() {
-  return (
-    <div className={styles.urgentTaunt}>
-      <p className={styles.urgentTextMessage}>YOU ALREADY FAILED</p>
-      <p className={styles.urgentSubtext}>Probably.</p>
-    </div>
-  );
-}
-
-export function ScreenDim() {
-  return <div className={styles.screenDim} />;
-}
-
-export function FakeFinish() {
-  return (
-    <div className={styles.fakeFinish}>
-      <div className={styles.finishText}>TIME'S UP!</div>
-      <div className={styles.finishSubtext}>Just kidding.</div>
-    </div>
+    </>
   );
 }
 
@@ -210,161 +292,57 @@ export function TinyHorse() {
   );
 }
 
-export function MotivationalCoach() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>You're doing incredibly well</p>
-      <p className={styles.tauntSubtext}>at touching a screen.</p>
-    </div>
-  );
-}
-
-export function FingerInspection() {
-  const [phase, setPhase] = useState<'scanning' | 'result'>('scanning');
+export function WrongCountdown() {
+  const [count, setCount] = useState(5);
   
   useEffect(() => {
-    const timer = setTimeout(() => setPhase('result'), 1800);
-    return () => clearTimeout(timer);
+    const numbers = [5, 4, 3, 2, 17, 42, 0];
+    let index = 0;
+    
+    const timer = setInterval(() => {
+      index += 1;
+      if (index < numbers.length) {
+        setCount(numbers[index]!);
+      }
+    }, 550);
+    
+    return () => clearInterval(timer);
   }, []);
   
   return (
-    <div className={styles.taunt}>
-      {phase === 'scanning' ? (
-        <p className={styles.tauntText}>Analysing finger...</p>
-      ) : (
-        <>
-          <p className={styles.tauntText}>Finger: acceptable</p>
-          <p className={styles.tauntSubtext}>Barely.</p>
-        </>
-      )}
+    <div className={styles.countdownCenter}>
+      <div className={styles.countdownNumber}>{count}</div>
     </div>
   );
 }
 
-export function FakeAchievement() {
-  return (
-    <div className={styles.fakeNotification}>
-      <div className={styles.notificationCard}>
-        <div className={styles.notificationIcon}>🏆</div>
-        <div className={styles.notificationContent}>
-          <div className={styles.notificationTitle}>Achievement Unlocked</div>
-          <div className={styles.notificationBody}>Still Touching It</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function EmergencyQuestion() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.urgentTextMessage}>QUICK</p>
-      <p className={styles.tauntText}>How many giraffes could fit</p>
-      <p className={styles.tauntSubtext}>inside a Tesco?</p>
-    </div>
-  );
-}
-
-export function UnhelpfulAdvice() {
-  const [phase, setPhase] = useState(0);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setPhase(1), 1800);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  const messages = [
-    { text: "Try not to think about seconds.", sub: "" },
-    { text: "You're thinking about seconds now,", sub: "aren't you?" },
-  ];
-  
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>{messages[phase]!.text}</p>
-      {messages[phase]!.sub && <p className={styles.tauntSubtext}>{messages[phase]!.sub}</p>}
-    </div>
-  );
-}
-
-export function SuspiciousButton() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.urgentTextMessage}>DO NOT PRESS</p>
-      <p className={styles.tauntSubtext}>(Your finger is busy anyway)</p>
-    </div>
-  );
-}
-
-export function Weather() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Unexpected weather event.</p>
-      <p className={styles.tauntSubtext}>☁️ 🌧️</p>
-    </div>
-  );
-}
-
-export function FakeCelebration() {
-  const [phase, setPhase] = useState<'yes' | 'nope'>('yes');
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setPhase('nope'), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  return (
-    <div className={styles.urgentTaunt}>
-      {phase === 'yes' ? (
-        <p className={styles.urgentTextMessage}>YOU DID IT!</p>
-      ) : (
-        <>
-          <p className={styles.tauntText}>No you didn't.</p>
-          <p className={styles.tauntSubtext}>Keep holding.</p>
-        </>
-      )}
-    </div>
-  );
-}
-
-export function DayNightCycle() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>☀️ ... 🌙 ... ☀️</p>
-      <p className={styles.tauntSubtext}>Time flies.</p>
-    </div>
-  );
-}
-
-export function FakeTimer() {
-  const fakeTime = Math.floor(Math.random() * 60);
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>00:{String(fakeTime).padStart(2, '0')}</p>
-      <p className={styles.tauntSubtext}>Just kidding.</p>
-    </div>
-  );
-}
-
-export function AnticipationBuildup() {
-  return (
-    <>
-      <div className={styles.screenDim} />
-      <div className={styles.taunt}>
-        <p className={styles.tauntText}>Something is about to happen.</p>
-      </div>
-    </>
-  );
-}
-
-export function FalseSafety() {
-  return (
-    <div className={styles.taunt}>
-      <p className={styles.tauntText}>Relax. No jump scares this round.</p>
-    </div>
-  );
-}
-
-// * Simplified/removed distractions (keeping for compatibility)
+// Simplified stubs for compatibility
+export function StopCounting() { return <YoureCounting />; }
+export function WayTooEarly() { return <Distraction3 />; }
+export function FingerGettingTired() { return <Distraction7 />; }
+export function Overthinking() { return <Distraction12 />; }
+export function FriendDidBetter() { return <Distraction6 />; }
+export function ProbablyWrong() { return <Distraction3 />; }
+export function TimeParadox() { return <Distraction2 />; }
+export function SwipeNotification() { return <FakeMessage />; }
+export function MathProblem() { return <Distraction9 />; }
+export function DistractedYet() { return <Distraction1 />; }
+export function SecondsFeelLonger() { return <Distraction5 />; }
+export function AlreadyFailed() { return <Distraction8 />; }
+export function ScreenDim() { return null; }
+export function FakeFinish() { return <TimeUp />; }
+export function MotivationalCoach() { return <Distraction4 />; }
+export function FingerInspection() { return <Distraction7 />; }
+export function FakeAchievement() { return null; }
+export function EmergencyQuestion() { return <Distraction11 />; }
+export function UnhelpfulAdvice() { return <YoureCounting />; }
+export function SuspiciousButton() { return null; }
+export function Weather() { return null; }
+export function FakeCelebration() { return <AlmostThere />; }
+export function DayNightCycle() { return null; }
+export function FakeTimer() { return <WrongTime />; }
+export function AnticipationBuildup() { return null; }
+export function FalseSafety() { return null; }
 export function ScreenShake() { return null; }
 export function Mosquito() { return null; }
 export function Spider() { return null; }
