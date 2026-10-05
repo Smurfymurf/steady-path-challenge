@@ -51,7 +51,6 @@ export function FingerGame() {
   const pointerIdRef = useRef<number | null>(null);
   const scheduledDistractionsRef = useRef<ScheduledDistraction[]>([]);
   const triggeredDistractionsRef = useRef<ScheduledDistraction[]>([]);
-  const animationFrameRef = useRef<number>(0);
   const config = useRef(getGameConfig());
   const roundCountRef = useRef(0);
   
@@ -90,38 +89,45 @@ export function FingerGame() {
     };
   }, [phase]);
   
-  // * Distraction trigger loop.
+  // * Distraction triggers.
+  // ! Each distraction gets its own timer rather than being polled on a
+  // ! requestAnimationFrame loop: rAF is throttled or suspended when the window
+  // ! loses focus or the compositor is busy, which silently skipped
+  // ! distractions even though the round itself timed correctly.
   useEffect(() => {
     if (phase !== 'holding' || !selectedDuration) {
       return;
     }
     
-    const checkDistractions = () => {
-      const elapsed = performance.now() - startTimeRef.current;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const elapsed = performance.now() - startTimeRef.current;
+    
+    scheduledDistractionsRef.current.forEach(scheduled => {
+      if (scheduled.triggered) {
+        return;
+      }
       
-      scheduledDistractionsRef.current.forEach(scheduled => {
-        if (!scheduled.triggered && elapsed >= scheduled.triggerTimeMs) {
+      const delay = Math.max(scheduled.triggerTimeMs - elapsed, 0);
+      
+      timers.push(
+        setTimeout(() => {
           scheduled.triggered = true;
           triggeredDistractionsRef.current.push(scheduled);
           setCurrentDistraction(scheduled);
           
-          // * Auto-clear after its duration, but only if a newer distraction
-          // * has not already replaced it, which would cut the new one short.
-          setTimeout(() => {
-            setCurrentDistraction(current => (current === scheduled ? null : current));
-          }, scheduled.event.durationMs);
-        }
-      });
-      
-      animationFrameRef.current = requestAnimationFrame(checkDistractions);
-    };
-    
-    animationFrameRef.current = requestAnimationFrame(checkDistractions);
+          // * Clear only if a newer distraction has not already replaced this
+          // * one, which would cut the newer one short.
+          timers.push(
+            setTimeout(() => {
+              setCurrentDistraction(current => (current === scheduled ? null : current));
+            }, scheduled.event.durationMs),
+          );
+        }, delay),
+      );
+    });
     
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      timers.forEach(clearTimeout);
     };
   }, [phase, selectedDuration]);
   

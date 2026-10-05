@@ -41,8 +41,8 @@ export function PerfectCelebration({ errorSeconds, targetSeconds }: PerfectCeleb
       const audio = new Audio('/sounds/perfect.mp3');
       audio.volume = 0.5;
       audio.play().catch(() => {});
-    } catch (e) {
-      // * Silent fail
+    } catch {
+      // * Asset or autoplay unavailable; the visual celebration still runs.
     }
   }, [isNearPerfect]);
   

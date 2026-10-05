@@ -63,7 +63,7 @@
     0 20px 60px rgba(102, 126, 234, 0.3),
     0 8px 16px rgba(0, 0, 0, 0.2),
     inset 0 -2px 0 rgba(255, 255, 255, 0.1);
-  transition: box-shadow 0.2s ease-out;
+  transition: box-shadow 0.45s ease-out;
   will-change: box-shadow;
 }
 
@@ -80,8 +80,27 @@
   transform: none !important;
 }
 
-.holdZone.held {
+/*
+ * ! The held colour is a separate layer that cross-fades, because gradients
+ * ! are not interpolable: setting it via background snapped instantly.
+ */
+.holdZone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  opacity: 0;
+  transition: opacity 0.45s ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.holdZone.held::after {
+  opacity: 1;
+}
+
+.holdZone.held {
   box-shadow: 
     0 24px 70px rgba(245, 87, 108, 0.5),
     0 8px 16px rgba(0, 0, 0, 0.3),
@@ -100,6 +119,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* * Keeps the dot above the cross-fading held colour layer. */
+  z-index: 1;
 }
 
 .ripple {
@@ -114,6 +135,18 @@
   box-shadow: 
     0 4px 20px rgba(255, 255, 255, 0.6),
     0 0 0 4px rgba(255, 255, 255, 0.2);
+  animation: centerDotIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes centerDotIn {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes instructionsFadeIn {
