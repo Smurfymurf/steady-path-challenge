@@ -13,6 +13,8 @@ interface GameStats {
   totalRounds: number;
   roundsByDuration: Record<ChallengeDuration, number>;
   lastPlayed: number;
+  currentStreak: number;
+  longestStreak: number;
 }
 
 /**
@@ -125,26 +127,42 @@ export function getGameStats(): GameStats {
         totalRounds: 0,
         roundsByDuration: { 10: 0, 20: 0, 30: 0, 60: 0 },
         lastPlayed: 0,
+        currentStreak: 0,
+        longestStreak: 0,
       };
     }
-    return JSON.parse(stored) as GameStats;
+    const parsed = JSON.parse(stored) as GameStats;
+    // * Backward compatibility
+    return {
+      ...parsed,
+      currentStreak: parsed.currentStreak ?? 0,
+      longestStreak: parsed.longestStreak ?? 0,
+    };
   } catch {
     return {
       totalRounds: 0,
       roundsByDuration: { 10: 0, 20: 0, 30: 0, 60: 0 },
       lastPlayed: 0,
+      currentStreak: 0,
+      longestStreak: 0,
     };
   }
 }
 
 /**
- * Record a completed round.
+ * Record a completed round and update streak.
  */
 export function recordRound(duration: ChallengeDuration): void {
   const stats = getGameStats();
   stats.totalRounds += 1;
   stats.roundsByDuration[duration] = (stats.roundsByDuration[duration] || 0) + 1;
   stats.lastPlayed = Date.now();
+  
+  // * Increment streak
+  stats.currentStreak += 1;
+  if (stats.currentStreak > stats.longestStreak) {
+    stats.longestStreak = stats.currentStreak;
+  }
   
   try {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));

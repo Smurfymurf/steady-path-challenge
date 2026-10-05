@@ -7,6 +7,8 @@ import type { TimerResult, PersonalBest, ChallengeDuration } from '../types';
 import { formatTime, formatError } from '../timer';
 import { shareOrCopy } from '../share';
 import { trackShareClicked, trackShareCompleted } from '../analytics';
+import { getGameStats } from '../storage';
+import { PerfectCelebration } from './PerfectCelebration';
 import styles from './ResultScreen.module.css';
 
 interface ResultScreenProps {
@@ -30,6 +32,7 @@ export function ResultScreen({
 }: ResultScreenProps) {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const error = formatError(result.errorMs);
+  const stats = getGameStats();
   
   const handleShare = async () => {
     trackShareClicked();
@@ -49,6 +52,9 @@ export function ResultScreen({
   
   return (
     <div className={styles.container}>
+      {/* Epic celebration for near-perfect scores */}
+      <PerfectCelebration errorSeconds={result.errorSeconds} targetSeconds={duration} />
+      
       <div className={styles.content}>
         {isNewRecord && (
           <div className={styles.recordBanner}>
@@ -95,6 +101,14 @@ export function ResultScreen({
           <p className={styles.performanceLabel}>{result.performance}</p>
           <p className={styles.errorDescription}>{error.description}</p>
         </div>
+        
+        {stats.currentStreak > 1 && (
+          <div className={styles.streakBanner}>
+            <div className={styles.streakLabel}>STREAK</div>
+            <div className={styles.streakValue}>{stats.currentStreak} 🔥</div>
+            <div className={styles.streakDescription}>Keep going!</div>
+          </div>
+        )}
         
         {personalBest && !isNewRecord && (
           <div className={styles.personalBest}>

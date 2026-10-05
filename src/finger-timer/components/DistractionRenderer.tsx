@@ -67,35 +67,74 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
   switch (event.id) {
     case 'random-numbers':
       return <Distractions.RandomNumbers />;
-    case 'youre-counting':
-    case 'stop-counting':
-      return <Distractions.YoureCounting />;
+    
+    // Thumb jokes
+    case 'thumb-joke-1':
+      return <Distractions.ThumbJoke1 />;
+    case 'thumb-joke-2':
+      return <Distractions.ThumbJoke2 />;
+    case 'thumb-joke-3':
+      return <Distractions.ThumbJoke3 />;
+    case 'thumb-joke-4':
+      return <Distractions.ThumbJoke4 />;
+    case 'thumb-joke-5':
+      return <Distractions.ThumbJoke5 />;
+    
+    // Counting taunts
+    case 'counting-taunt-1':
+      return <Distractions.CountingTaunt1 />;
+    case 'counting-taunt-2':
+      return <Distractions.CountingTaunt2 />;
+    case 'counting-taunt-3':
+      return <Distractions.CountingTaunt3 />;
+    case 'counting-taunt-4':
+      return <Distractions.CountingTaunt4 />;
+    
+    // General taunts (20 variations)
+    case 'taunt-1':
+      return <Distractions.Taunt1 />;
+    case 'taunt-2':
+      return <Distractions.Taunt2 />;
+    case 'taunt-3':
+      return <Distractions.Taunt3 />;
+    case 'taunt-4':
+      return <Distractions.Taunt4 />;
+    case 'taunt-5':
+      return <Distractions.Taunt5 />;
+    case 'taunt-6':
+      return <Distractions.Taunt6 />;
+    case 'taunt-7':
+      return <Distractions.Taunt7 />;
+    case 'taunt-8':
+      return <Distractions.Taunt8 />;
+    case 'taunt-9':
+      return <Distractions.Taunt9 />;
+    case 'taunt-10':
+      return <Distractions.Taunt10 />;
+    case 'taunt-11':
+      return <Distractions.Taunt11 />;
+    case 'taunt-12':
+      return <Distractions.Taunt12 />;
+    case 'taunt-13':
+      return <Distractions.Taunt13 />;
+    case 'taunt-14':
+      return <Distractions.Taunt14 />;
+    case 'taunt-15':
+      return <Distractions.Taunt15 />;
+    case 'taunt-16':
+      return <Distractions.Taunt16 />;
+    case 'taunt-17':
+      return <Distractions.Taunt17 />;
+    case 'taunt-18':
+      return <Distractions.Taunt18 />;
+    case 'taunt-19':
+      return <Distractions.Taunt19 />;
+    case 'taunt-20':
+      return <Distractions.Taunt20 />;
+    
+    // Other distractions
     case 'wrong-time':
       return <Distractions.WrongTime />;
-    case 'distraction-1':
-      return <Distractions.Distraction1 />;
-    case 'distraction-2':
-      return <Distractions.Distraction2 />;
-    case 'distraction-3':
-      return <Distractions.Distraction3 />;
-    case 'distraction-4':
-      return <Distractions.Distraction4 />;
-    case 'distraction-5':
-      return <Distractions.Distraction5 />;
-    case 'distraction-6':
-      return <Distractions.Distraction6 />;
-    case 'distraction-7':
-      return <Distractions.Distraction7 />;
-    case 'distraction-8':
-      return <Distractions.Distraction8 />;
-    case 'distraction-9':
-      return <Distractions.Distraction9 />;
-    case 'distraction-10':
-      return <Distractions.Distraction10 />;
-    case 'distraction-11':
-      return <Distractions.Distraction11 />;
-    case 'distraction-12':
-      return <Distractions.Distraction12 />;
     case 'release-now':
       return <Distractions.ReleaseNow />;
     case 'almost-there':
@@ -105,7 +144,6 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
     case 'fake-battery':
       return <Distractions.FakeBattery />;
     case 'fake-message':
-    case 'swipe-notification':
       return <Distractions.FakeMessage />;
     case 'pigeon':
       return <Distractions.Pigeon />;
@@ -113,24 +151,6 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
       return <Distractions.TinyHorse />;
     case 'wrong-countdown':
       return <Distractions.WrongCountdown />;
-    
-    // Fallback mappings
-    case 'way-too-early':
-    case 'finger-getting-tired':
-    case 'overthinking':
-    case 'friend-did-better':
-    case 'probably-wrong':
-    case 'time-paradox':
-    case 'math-problem':
-    case 'distracted-yet':
-    case 'seconds-feel-longer':
-    case 'already-failed':
-    case 'motivational-coach':
-    case 'finger-inspection':
-    case 'emergency-question':
-    case 'unhelpful-advice':
-    case 'fake-timer':
-      return <Distractions.YoureCounting />;
     
     default:
       return null;

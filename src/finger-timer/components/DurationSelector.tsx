@@ -27,8 +27,10 @@ export function DurationSelector({ personalBests, onSelectDuration, onSettings }
       
       <div className={styles.content}>
         <div className={styles.header}>
-          <h1 className={styles.title}>FINGER CHALLENGE</h1>
-          <p className={styles.subtitle}>Choose your target</p>
+          <h1 className={styles.title}>FINGER</h1>
+          <h1 className={styles.title}>CHALLENGE</h1>
+          <p className={styles.subtitle}>Can you guess time perfectly?</p>
+          <p className={styles.tagline}>Spoiler: You can't.</p>
         </div>
         
         <div className={styles.durations}>
@@ -42,10 +44,13 @@ export function DurationSelector({ personalBests, onSelectDuration, onSettings }
                 className={styles.durationButton}
                 onClick={() => onSelectDuration(duration)}
               >
-                <span className={styles.durationValue}>{duration} SEC</span>
+                <div className={styles.durationMain}>
+                  <span className={styles.durationValue}>{duration}</span>
+                  <span className={styles.durationUnit}>SEC</span>
+                </div>
                 {pb && (
                   <span className={styles.pbBadge}>
-                    PB: {pb.errorSeconds.toFixed(3)}s
+                    Best: {pb.errorSeconds.toFixed(3)}s
                   </span>
                 )}
               </button>
@@ -54,14 +59,20 @@ export function DurationSelector({ personalBests, onSelectDuration, onSettings }
         </div>
         
         <div className={styles.instructions}>
-          <p className={styles.instructionText}>
-            Press and hold your finger
-          </p>
-          <p className={styles.instructionText}>
-            Lift when you think the time is up
-          </p>
+          <div className={styles.instructionStep}>
+            <div className={styles.stepNumber}>1</div>
+            <p className={styles.instructionText}>Press & hold</p>
+          </div>
+          <div className={styles.instructionStep}>
+            <div className={styles.stepNumber}>2</div>
+            <p className={styles.instructionText}>Timer disappears</p>
+          </div>
+          <div className={styles.instructionStep}>
+            <div className={styles.stepNumber}>3</div>
+            <p className={styles.instructionText}>Release at perfect time</p>
+          </div>
           <p className={styles.warningText}>
-            No timer. Obviously.
+            We'll try to distract you.
           </p>
         </div>
       </div>

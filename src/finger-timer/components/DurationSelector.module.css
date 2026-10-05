@@ -38,32 +38,39 @@
 
 .header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 60px;
   animation: fadeInDown 0.6s ease-out;
 }
 
 .title {
-  font-size: 64px;
+  font-size: 72px;
   font-weight: 900;
   color: #fff;
-  margin: 0 0 20px 0;
-  letter-spacing: -3px;
+  margin: 0;
+  line-height: 0.9;
+  letter-spacing: -4px;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 10px 40px rgba(255, 255, 255, 0.2);
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 30px rgba(255, 255, 255, 0.3));
 }
 
 .subtitle {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 24px 0 8px 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.tagline {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.4);
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 700;
+  font-weight: 500;
+  font-style: italic;
 }
 
 .durations {
@@ -119,12 +126,26 @@
   transform: translateY(-4px) scale(1);
 }
 
+.durationMain {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .durationValue {
-  font-size: 36px;
+  font-size: 56px;
   font-weight: 900;
   color: #fff;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.durationUnit {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
-  letter-spacing: -1px;
+  letter-spacing: 1px;
 }
 
 .pbBadge {
@@ -141,20 +162,57 @@
 .instructions {
   text-align: center;
   animation: fadeIn 0.6s ease-out 0.4s backwards;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.instructionStep {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  transition: all 0.3s ease-out;
+}
+
+.instructionStep:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(8px);
+}
+
+.stepNumber {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #667eea;
+  flex-shrink: 0;
 }
 
 .instructionText {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 8px 0;
-  line-height: 1.5;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: left;
+  flex: 1;
 }
 
 .warningText {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.4);
-  margin: 16px 0 0 0;
-  font-style: italic;
+  font-size: 16px;
+  color: rgba(255, 59, 48, 0.8);
+  margin: 24px 0 0 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 @keyframes fadeInDown {
