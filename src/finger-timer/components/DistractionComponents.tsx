@@ -6,23 +6,43 @@
 import { useEffect, useState } from 'react';
 import styles from './Distractions.module.css';
 
+// * Matches the numberFloat animation duration so numbers unmount once they
+// * have finished fading instead of lingering invisibly or being cut off.
+const FLOAT_LIFETIME_MS = 2800;
+
+interface FloatingNumber {
+  id: number;
+  value: number;
+  x: number;
+  y: number;
+  bornAt: number;
+}
+
 export function RandomNumbers() {
-  const [numbers, setNumbers] = useState<Array<{ id: number; value: number; x: number; y: number }>>([]);
-  
+  const [numbers, setNumbers] = useState<FloatingNumber[]>([]);
+
   useEffect(() => {
+    let sequence = 0;
+
     const interval = setInterval(() => {
-      const newNumber = {
-        id: Date.now(),
+      sequence += 1;
+      const next: FloatingNumber = {
+        id: sequence,
         value: Math.floor(Math.random() * 60) + 1,
-        x: Math.random() * 80 + 10,
-        y: Math.random() * 60 + 20,
+        x: Math.random() * 70 + 15,
+        y: Math.random() * 55 + 22,
+        bornAt: Date.now(),
       };
-      setNumbers(prev => [...prev, newNumber].slice(-6));
-    }, 700);
-    
+
+      setNumbers(prev => {
+        const cutoff = Date.now() - FLOAT_LIFETIME_MS;
+        return [...prev.filter(n => n.bornAt > cutoff), next];
+      });
+    }, 900);
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return (
     <div className={styles.randomNumbers}>
       {numbers.map(num => (
@@ -355,18 +375,21 @@ export function Taunt20() {
 // FAKE TIME DISPLAYS
 export function WrongTime() {
   const [time, setTime] = useState(3);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setTime(Math.floor(Math.random() * 30) + 5);
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
-  
+
   return (
     <div className={styles.tauntTop}>
       <div className={styles.fakeTimeCard}>
-        <div className={styles.fakeTimeNumber}>{time}</div>
+        {/* ! Keyed so each value cross-fades instead of snapping to new text. */}
+        <div key={time} className={styles.fakeTimeNumber}>
+          {time}
+        </div>
         <div className={styles.fakeTimeLabel}>seconds elapsed</div>
         <div className={styles.fakeTimeDisclaimer}>probably not</div>
       </div>
@@ -473,25 +496,23 @@ export function TinyHorse() {
 }
 
 export function WrongCountdown() {
-  const [count, setCount] = useState(5);
-  
+  const [step, setStep] = useState(0);
+  const numbers = [5, 4, 3, 2, 17, 42, 0];
+
   useEffect(() => {
-    const numbers = [5, 4, 3, 2, 17, 42, 0];
-    let index = 0;
-    
     const timer = setInterval(() => {
-      index += 1;
-      if (index < numbers.length) {
-        setCount(numbers[index]!);
-      }
-    }, 650);
-    
+      setStep(prev => Math.min(prev + 1, numbers.length - 1));
+    }, 750);
+
     return () => clearInterval(timer);
-  }, []);
-  
+  }, [numbers.length]);
+
   return (
     <div className={styles.countdownCenter}>
-      <div className={styles.countdownNumber}>{count}</div>
+      {/* ! Keyed on the step so every digit replays its settle animation. */}
+      <div key={step} className={styles.countdownNumber}>
+        {numbers[step]}
+      </div>
     </div>
   );
 }

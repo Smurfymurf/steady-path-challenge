@@ -1,41 +1,40 @@
 /**
- * Smooth fade animations for distraction transitions.
+ * Cross-fade wrapper for distraction transitions.
+ *
+ * ! Opacity only. Distraction containers are position: fixed, and a transformed
+ * ! ancestor becomes their containing block, which makes them jump when the
+ * ! animation starts and ends. Entry motion belongs on the cards themselves.
  */
 
 .fadingIn {
-  animation: smoothFadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: distractionFadeIn 0.45s ease-out both;
 }
 
 .fadingOut {
-  animation: smoothFadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: distractionFadeOut 0.5s ease-in both;
 }
 
-@keyframes smoothFadeIn {
-  0% {
+@keyframes distractionFadeIn {
+  from {
     opacity: 0;
-    transform: scale(0.95) translateY(-10px);
   }
-  100% {
+  to {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
-@keyframes smoothFadeOut {
-  0% {
+@keyframes distractionFadeOut {
+  from {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
-  100% {
+  to {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
   }
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .fadingIn,
   .fadingOut {
-    animation: none;
+    animation-duration: 0.01ms;
   }
 }

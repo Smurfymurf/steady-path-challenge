@@ -8,6 +8,17 @@
   z-index: 5;
   pointer-events: none;
   overflow: hidden;
+  /* * Eases the whole field in so the press feels answered, not switched on. */
+  animation: holdFieldIn 0.9s ease-out both;
+}
+
+@keyframes holdFieldIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Radial pulses emanating from center */

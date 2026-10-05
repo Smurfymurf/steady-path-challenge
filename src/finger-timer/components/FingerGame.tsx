@@ -105,9 +105,10 @@ export function FingerGame() {
           triggeredDistractionsRef.current.push(scheduled);
           setCurrentDistraction(scheduled);
           
-          // * Auto-clear distraction after its duration.
+          // * Auto-clear after its duration, but only if a newer distraction
+          // * has not already replaced it, which would cut the new one short.
           setTimeout(() => {
-            setCurrentDistraction(null);
+            setCurrentDistraction(current => (current === scheduled ? null : current));
           }, scheduled.event.durationMs);
         }
       });

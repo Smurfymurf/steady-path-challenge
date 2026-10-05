@@ -16,21 +16,26 @@
   font-weight: 900;
   color: rgba(255, 255, 255, 0.15);
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  animation: numberFloat 2s ease-out forwards;
+  animation: numberFloat 2.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  will-change: transform, opacity;
 }
 
 @keyframes numberFloat {
   0% {
     opacity: 0;
-    transform: scale(0.5) translateY(0);
+    transform: scale(0.82) translateY(14px);
   }
-  20% {
+  28% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  70% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: scale(1.5) translateY(-100px);
+    transform: scale(1.12) translateY(-74px);
   }
 }
 
@@ -67,7 +72,7 @@
     0 20px 60px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: cardSlideIn 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
 }
 
@@ -95,7 +100,7 @@
 @keyframes cardSlideIn {
   0% {
     opacity: 0;
-    transform: translateY(-30px) scale(0.95);
+    transform: translateY(-18px) scale(0.97);
   }
   100% {
     opacity: 1;
@@ -103,26 +108,14 @@
   }
 }
 
-/* Smooth fade out for all distractions */
-.tauntTop,
-.tauntBottom,
-.urgentBottom,
-.notificationTop,
-.fakeFinish,
-.countdownCenter {
+/* Settle motion runs once on entry; the renderer cross-fades in and out. */
+.tauntCard,
+.fakeTimeCard,
+.urgentCard,
+.notificationCard,
+.captionCard {
   animation-fill-mode: both;
-}
-
-/* Global distraction fade-out */
-@keyframes smoothFadeOut {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
+  will-change: transform, opacity;
 }
 
 /* Fake Time Display */
@@ -136,7 +129,7 @@
     0 24px 70px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(102, 126, 234, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  animation: cardSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: cardSlideIn 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
 }
 
@@ -149,6 +142,20 @@
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   text-shadow: 0 4px 40px rgba(102, 126, 234, 0.6);
   letter-spacing: -2px;
+  animation: digitSwap 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes digitSwap {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 .fakeTimeLabel {
@@ -192,7 +199,7 @@
   box-shadow: 
     0 24px 70px rgba(255, 59, 48, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: urgentPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: urgentPulse 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
 }
 
@@ -223,10 +230,10 @@
 @keyframes urgentPulse {
   0% {
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.92);
   }
-  50% {
-    transform: scale(1.05);
+  60% {
+    transform: scale(1.02);
   }
   100% {
     opacity: 1;
@@ -258,12 +265,12 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.95);
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.5s ease-out both;
 }
 
 .finishCard {
   text-align: center;
-  animation: finishPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: finishPop 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .finishText {
@@ -298,10 +305,10 @@
 @keyframes finishPop {
   0% {
     opacity: 0;
-    transform: scale(0.3);
+    transform: scale(0.72);
   }
-  50% {
-    transform: scale(1.1);
+  60% {
+    transform: scale(1.04);
   }
   100% {
     opacity: 1;
@@ -333,12 +340,12 @@
   box-shadow: 
     0 16px 50px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-  animation: notificationSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: notificationSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .notificationIcon {
   font-size: 32px;
-  animation: iconBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: iconBounce 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .notificationText {
@@ -367,23 +374,26 @@
 @keyframes notificationSlide {
   0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-40px);
+    transform: translateY(-28px);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 
 @keyframes iconBounce {
   0% {
-    transform: scale(0) rotate(-180deg);
+    transform: scale(0.4) rotate(-35deg);
+    opacity: 0;
   }
   60% {
-    transform: scale(1.2) rotate(10deg);
+    transform: scale(1.08) rotate(4deg);
+    opacity: 1;
   }
   100% {
     transform: scale(1) rotate(0deg);
+    opacity: 1;
   }
 }
 
@@ -397,7 +407,7 @@
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-  animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: cardSlideIn 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
   display: inline-block;
   margin: 0 auto;
@@ -498,16 +508,16 @@
   text-shadow: 
     0 0 50px rgba(255, 255, 255, 0.5),
     0 8px 60px rgba(0, 0, 0, 0.8);
-  animation: countdownPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: countdownPop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes countdownPop {
   0% {
     opacity: 0;
-    transform: scale(0) rotate(-20deg);
+    transform: scale(0.75) rotate(-6deg);
   }
   60% {
-    transform: scale(1.15) rotate(5deg);
+    transform: scale(1.05) rotate(1deg);
   }
   100% {
     opacity: 1;

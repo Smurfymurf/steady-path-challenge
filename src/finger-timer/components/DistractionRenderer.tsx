@@ -16,6 +16,10 @@ interface DistractionRendererProps {
   soundEnabled: boolean;
 }
 
+// ! Must match the .fadingOut animation duration in DistractionRenderer.module.css
+// ! so the fade finishes exactly as the game unmounts the distraction.
+const FADE_OUT_MS = 500;
+
 export function DistractionRenderer({ distraction, soundEnabled }: DistractionRendererProps) {
   const [jumpScareActive, setJumpScareActive] = useState(false);
   const [jumpScareSrc, setJumpScareSrc] = useState<string | null>(null);
@@ -56,10 +60,10 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
       };
     }
     
-    // * Start fade-out animation 500ms before distraction ends
+    // * Begin the fade so it lands on the moment the distraction is removed.
     const fadeOutTimer = setTimeout(() => {
       setFadingOut(true);
-    }, Math.max(event.durationMs - 500, 0));
+    }, Math.max(event.durationMs - FADE_OUT_MS, 0));
     
     return () => {
       clearTimeout(fadeOutTimer);

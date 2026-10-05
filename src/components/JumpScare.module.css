@@ -7,7 +7,7 @@
   overflow: hidden;
   background: #000;
   pointer-events: none;
-  animation: scare-shake 0.32s ease-in-out 1;
+  animation: scare-shake 0.4s ease-in-out 2;
 }
 
 .flash {

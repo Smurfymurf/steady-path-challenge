@@ -7,6 +7,9 @@ interface JumpScareProps {
   imageSrc: string | null;
 }
 
+// * Defined in styles/global.css so it can target #root outside this module.
+const SHAKE_CLASS = 'jumpScareShake';
+
 /**
  * Full-screen face slam with screen shake for wall-hit jump scares.
  */
@@ -14,11 +17,31 @@ export function JumpScare({ visible, imageSrc }: JumpScareProps) {
   const [burstKey, setBurstKey] = useState(0);
 
   useEffect(() => {
-    if (visible && imageSrc) {
-      setBurstKey((value) => value + 1);
-      // * Trigger intense vibration on jump scare
-      jumpScareVibration();
+    if (!visible || !imageSrc) {
+      return;
     }
+
+    setBurstKey((value) => value + 1);
+    jumpScareVibration();
+
+    // * Shake the entire app, not just this overlay, so the phone feels hit.
+    const root = document.getElementById('root');
+    if (!root) {
+      return;
+    }
+
+    root.classList.remove(SHAKE_CLASS);
+    // ! Force a reflow so the animation restarts on back-to-back scares.
+    void root.offsetWidth;
+    root.classList.add(SHAKE_CLASS);
+
+    const cleanupShake = () => root.classList.remove(SHAKE_CLASS);
+    root.addEventListener('animationend', cleanupShake, { once: true });
+
+    return () => {
+      root.removeEventListener('animationend', cleanupShake);
+      cleanupShake();
+    };
   }, [visible, imageSrc]);
 
   if (!visible || !imageSrc) {

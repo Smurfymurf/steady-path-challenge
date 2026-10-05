@@ -32,6 +32,48 @@ body,
   background: #071820;
 }
 
+/* * Whole-screen shake driven by the jump scare overlay. */
+#root.jumpScareShake {
+  animation: jump-scare-screen-shake 0.75s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes jump-scare-screen-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  8% {
+    transform: translate3d(-14px, 8px, 0) rotate(-1.2deg);
+  }
+  18% {
+    transform: translate3d(16px, -10px, 0) rotate(1.4deg);
+  }
+  28% {
+    transform: translate3d(-18px, -6px, 0) rotate(-1.6deg);
+  }
+  38% {
+    transform: translate3d(14px, 12px, 0) rotate(1.1deg);
+  }
+  50% {
+    transform: translate3d(-12px, -12px, 0) rotate(-0.9deg);
+  }
+  62% {
+    transform: translate3d(10px, 8px, 0) rotate(0.7deg);
+  }
+  74% {
+    transform: translate3d(-7px, -5px, 0) rotate(-0.5deg);
+  }
+  86% {
+    transform: translate3d(4px, 3px, 0) rotate(0.3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root.jumpScareShake {
+    animation: none;
+  }
+}
+
 body {
   font-family: var(--font-body);
   color: var(--color-text);
