@@ -12,7 +12,7 @@
 
 .instructions {
   position: absolute;
-  top: 80px;
+  top: calc(56px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -48,6 +48,8 @@
 .holdZone {
   width: 280px;
   height: 280px;
+  /* * Above the holding effects field, below the instructions and distractions. */
+  z-index: 2;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
@@ -176,9 +178,35 @@
     width: 28px;
     height: 28px;
   }
-  
+}
+
+/*
+ * * Short viewports (landscape phones) have no room for a 240px circle plus
+ * * the heading, so both shrink rather than overlapping.
+ */
+@media (max-height: 600px) {
   .instructions {
-    transform: translate(-50%, -140px);
+    top: calc(16px + var(--safe-top));
+  }
+
+  .title {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .holdZone {
+    width: 170px;
+    height: 170px;
+  }
+
+  .centerDot {
+    width: 22px;
+    height: 22px;
   }
 }
 

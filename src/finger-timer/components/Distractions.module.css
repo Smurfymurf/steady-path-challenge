@@ -39,10 +39,13 @@
   }
 }
 
-/* Taunt Cards - positioned at top */
+/*
+ * Taunt cards sit in the clear bands above and below the 280px centre circle
+ * so a thumb never covers them.
+ */
 .tauntTop {
   position: fixed;
-  top: 60px;
+  top: calc(60px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -53,7 +56,7 @@
 
 .tauntBottom {
   position: fixed;
-  bottom: 80px;
+  bottom: calc(80px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -180,7 +183,7 @@
 /* Urgent Cards - positioned at bottom */
 .urgentBottom {
   position: fixed;
-  bottom: 100px;
+  bottom: calc(100px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 45;
@@ -319,7 +322,7 @@
 /* Notifications */
 .notificationTop {
   position: fixed;
-  top: 20px;
+  top: calc(20px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -422,10 +425,10 @@
   letter-spacing: 0.3px;
 }
 
-/* Pigeon */
+/* Pigeon - walks the band below the circle, not across it. */
 .pigeon {
   position: fixed;
-  bottom: 50%;
+  top: 68%;
   left: -100px;
   z-index: 40;
   animation: pigeonWalk 6s linear;
@@ -458,7 +461,7 @@
 /* Tiny Horse */
 .tinyHorse {
   position: fixed;
-  bottom: 40px;
+  bottom: calc(40px + var(--safe-bottom));
   left: -80px;
   z-index: 40;
   animation: horseGallop 4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -488,12 +491,15 @@
   }
 }
 
-/* Wrong Countdown */
+/*
+ * Wrong Countdown
+ * ! Sits above the circle, not centred on it: a thumb covers dead centre.
+ */
 .countdownCenter {
   position: fixed;
-  top: 50%;
+  top: calc(48px + var(--safe-top));
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   z-index: 40;
   pointer-events: none;
 }
@@ -559,6 +565,84 @@
   .fakeTimeCard,
   .urgentCard {
     padding: 24px 28px;
+  }
+}
+
+/* * Landscape phones: compress so cards keep clear of the centre circle. */
+@media (max-height: 600px) {
+  .tauntTop,
+  .countdownCenter {
+    top: calc(12px + var(--safe-top));
+  }
+  
+  .tauntBottom {
+    bottom: calc(14px + var(--safe-bottom));
+  }
+  
+  .urgentBottom {
+    bottom: calc(16px + var(--safe-bottom));
+  }
+  
+  .tauntCard,
+  .fakeTimeCard,
+  .urgentCard {
+    padding: 14px 22px;
+    border-radius: 18px;
+  }
+  
+  .tauntPrimary {
+    font-size: 20px;
+  }
+  
+  .tauntSecondary {
+    font-size: 15px;
+    margin-top: 6px;
+  }
+  
+  .fakeTimeNumber {
+    font-size: 44px;
+  }
+  
+  .fakeTimeLabel {
+    font-size: 13px;
+    margin: 8px 0 4px 0;
+  }
+  
+  .fakeTimeDisclaimer {
+    font-size: 13px;
+  }
+  
+  .urgentText {
+    font-size: 28px;
+  }
+  
+  .urgentSubtext {
+    font-size: 15px;
+    margin-top: 8px;
+  }
+  
+  .countdownNumber {
+    font-size: 72px;
+  }
+  
+  .floatingNumber {
+    font-size: 40px;
+  }
+  
+  .finishText {
+    font-size: 40px;
+  }
+  
+  .finishSubtext {
+    font-size: 19px;
+  }
+  
+  .captionText {
+    font-size: 16px;
+  }
+  
+  .captionCard {
+    padding: 10px 20px;
   }
 }
 

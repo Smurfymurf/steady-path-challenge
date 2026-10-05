@@ -5,7 +5,8 @@
 .container {
   position: fixed;
   inset: 0;
-  z-index: 5;
+  /* ! Must stay below .holdZone so the field reads as behind the circle. */
+  z-index: 1;
   pointer-events: none;
   overflow: hidden;
   /* * Eases the whole field in so the press feels answered, not switched on. */

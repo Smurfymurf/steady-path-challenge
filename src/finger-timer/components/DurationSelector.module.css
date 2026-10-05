@@ -8,13 +8,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  /* ! Content is taller than a short phone viewport, so it must scroll
+   * ! rather than clip, and clear the notch and home indicator. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding:
+    calc(84px + var(--safe-top))
+    calc(20px + var(--safe-right))
+    calc(32px + var(--safe-bottom))
+    calc(20px + var(--safe-left));
 }
 
 .settingsButton {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: calc(20px + var(--safe-top));
+  right: calc(20px + var(--safe-right));
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -34,6 +42,9 @@
 .content {
   max-width: 500px;
   width: 100%;
+  /* ! auto margins, not align-items alone: a centred flex item that overflows
+   * ! its scroll container cuts off the top and cannot be scrolled back to. */
+  margin: auto;
 }
 
 .header {
@@ -248,19 +259,126 @@
 
 @media (max-width: 480px) {
   .title {
-    font-size: 42px;
+    font-size: 52px;
+    letter-spacing: -2.5px;
   }
   
   .subtitle {
     font-size: 18px;
+    margin-top: 18px;
+  }
+  
+  .tagline {
+    font-size: 15px;
+  }
+  
+  .header {
+    margin-bottom: 36px;
   }
   
   .durationValue {
-    font-size: 32px;
+    font-size: 44px;
+  }
+  
+  .durationUnit {
+    font-size: 15px;
   }
   
   .durationButton {
-    padding: 28px 20px;
+    padding: 26px 16px;
+    border-radius: 20px;
+  }
+  
+  .durations {
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  
+  .instructionStep {
+    padding: 13px 18px;
+    gap: 13px;
+    margin-bottom: 10px;
+  }
+  
+  .stepNumber {
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+  }
+  
+  .instructionText {
+    font-size: 16px;
+  }
+  
+  .warningText {
+    font-size: 15px;
+    margin-top: 18px;
+  }
+}
+
+/* * Landscape phones: drop to a single row and trim the vertical rhythm. */
+@media (max-height: 600px) {
+  .header {
+    margin-bottom: 20px;
+  }
+  
+  .title {
+    font-size: 34px;
+    letter-spacing: -1.5px;
+  }
+  
+  .subtitle {
+    font-size: 15px;
+    margin: 10px 0 4px 0;
+  }
+  
+  .tagline {
+    font-size: 13px;
+  }
+  
+  .durations {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .durationButton {
+    padding: 16px 8px;
+    border-radius: 16px;
+  }
+  
+  .durationValue {
+    font-size: 30px;
+  }
+  
+  .durationUnit {
+    font-size: 12px;
+  }
+  
+  .pbBadge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  
+  .instructionStep {
+    padding: 9px 14px;
+    gap: 10px;
+    margin-bottom: 7px;
+  }
+  
+  .stepNumber {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+  
+  .instructionText {
+    font-size: 14px;
+  }
+  
+  .warningText {
+    font-size: 13px;
+    margin-top: 14px;
   }
 }
 

@@ -26,11 +26,14 @@ export function RandomNumbers() {
 
     const interval = setInterval(() => {
       sequence += 1;
+      // * Keep numbers out of the centre band, where the circle and the
+      // * player's thumb would hide them.
+      const useUpperBand = Math.random() < 0.5;
       const next: FloatingNumber = {
         id: sequence,
         value: Math.floor(Math.random() * 60) + 1,
         x: Math.random() * 70 + 15,
-        y: Math.random() * 55 + 22,
+        y: useUpperBand ? Math.random() * 16 + 11 : Math.random() * 16 + 71,
         bornAt: Date.now(),
       };
 
