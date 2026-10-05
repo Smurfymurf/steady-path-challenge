@@ -1,0 +1,702 @@
+/**
+ * Styles for all distraction events.
+ */
+
+/* * Common positioning */
+.fakeBattery,
+.pigeon,
+.wrongCountdown,
+.motivationalCoach,
+.fingerInspection,
+.fakeAchievement,
+.emergencyQuestion,
+.mosquito,
+.spider,
+.fakeCrack,
+.bouncingEmoji,
+.fakeLoading,
+.unhelpfulAdvice,
+.suspiciousButton,
+.tinyHorse,
+.weather,
+.fakeCelebration,
+.dayNightCycle,
+.fakeTimer,
+.anticipation,
+.falseSafety {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+/* * Fake Battery */
+.fakeBattery {
+  top: 20px;
+  bottom: auto;
+  right: 20px;
+  left: auto;
+  width: auto;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 12px 20px;
+  border-radius: 12px;
+  animation: batterySlideIn 0.3s ease-out;
+}
+
+.batteryIcon {
+  width: 40px;
+  height: 20px;
+  border: 2px solid #ff3b30;
+  border-radius: 4px;
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.batteryIcon::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 10px;
+  background: #ff3b30;
+}
+
+.batteryLevel {
+  height: 100%;
+  background: #ff3b30;
+  transition: width 0.3s;
+}
+
+.batteryText {
+  color: #ff3b30;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+@keyframes batterySlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* * Pigeon */
+.pigeonWalk {
+  animation: walkAcross 4s linear;
+}
+
+.pigeonEmoji {
+  font-size: 48px;
+}
+
+@keyframes walkAcross {
+  from {
+    transform: translateX(-100vw);
+  }
+  to {
+    transform: translateX(100vw);
+  }
+}
+
+/* * Screen Shake */
+.screenShake {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  animation: shake 0.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-10px, -5px); }
+  20% { transform: translate(8px, 6px); }
+  30% { transform: translate(-8px, 3px); }
+  40% { transform: translate(10px, -4px); }
+  50% { transform: translate(-6px, 5px); }
+  60% { transform: translate(7px, -6px); }
+  70% { transform: translate(-9px, 4px); }
+  80% { transform: translate(6px, -3px); }
+  90% { transform: translate(-5px, 5px); }
+}
+
+/* * Wrong Countdown */
+.countdownNumber {
+  font-size: 120px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: countdownPop 0.4s ease-out;
+}
+
+@keyframes countdownPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* * Motivational Coach */
+.coachText {
+  font-size: 24px;
+  color: #fff;
+  text-align: center;
+  padding: 0 30px;
+  line-height: 1.4;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* * Finger Inspection */
+.scanningRing {
+  width: 120px;
+  height: 120px;
+  border: 3px solid #00ff00;
+  border-radius: 50%;
+  animation: scanPulse 1.5s ease-in-out infinite;
+}
+
+.inspectionText,
+.inspectionResult {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+@keyframes scanPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+}
+
+/* * Fake Achievement */
+.fakeAchievement {
+  flex-direction: row;
+  background: rgba(0, 0, 0, 0.95);
+  padding: 20px 30px;
+  border-radius: 16px;
+  gap: 16px;
+  animation: achievementSlide 0.5s ease-out;
+}
+
+.achievementIcon {
+  font-size: 48px;
+}
+
+.achievementTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 4px;
+}
+
+.achievementDesc {
+  font-size: 14px;
+  color: #fff;
+}
+
+@keyframes achievementSlide {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* * Emergency Question */
+.questionHeader {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ff3b30;
+  margin-bottom: 16px;
+  animation: urgentPulse 0.5s ease-in-out infinite;
+}
+
+.questionBody {
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  padding: 0 30px;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+.fakeButtons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fakeButton {
+  padding: 12px 24px;
+  background: #007aff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* * Mosquito */
+.mosquitoFly {
+  font-size: 32px;
+  animation: mosquitoBuzz 3s ease-in-out infinite;
+}
+
+@keyframes mosquitoBuzz {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-50px, -30px) rotate(45deg);
+  }
+  50% {
+    transform: translate(40px, 20px) rotate(-30deg);
+  }
+  75% {
+    transform: translate(-30px, 40px) rotate(60deg);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* * Spider */
+.spiderWalk {
+  font-size: 48px;
+  animation: spiderCrawl 4s ease-in-out;
+}
+
+@keyframes spiderCrawl {
+  from {
+    transform: translate(-50vw, -50vh);
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/* * Fake Crack */
+.fakeCrack {
+  background: transparent;
+}
+
+.crackSvg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.crackLine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: crackGrow 1s ease-out forwards;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+@keyframes crackGrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* * Bouncing Emoji */
+.emoji {
+  position: absolute;
+  font-size: 48px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-100px);
+  }
+}
+
+/* * Upside Down */
+.upsideDown {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+
+/* * Fake Loading */
+.loadingText {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.loadingBar {
+  width: 300px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.loadingProgress {
+  height: 100%;
+  background: #007aff;
+  transition: width 0.5s ease-out;
+}
+
+.loadingPercent {
+  font-size: 16px;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+/* * Unhelpful Advice */
+.adviceText {
+  font-size: 22px;
+  color: #fff;
+  text-align: center;
+  padding: 0 30px;
+  max-width: 500px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* * Suspicious Button */
+.bigRedButton {
+  padding: 24px 48px;
+  background: #ff3b30;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: not-allowed;
+  animation: buttonPulse 0.8s ease-in-out infinite;
+  box-shadow: 0 8px 32px rgba(255, 59, 48, 0.5);
+}
+
+@keyframes buttonPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8px 32px rgba(255, 59, 48, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(255, 59, 48, 0.7);
+  }
+}
+
+/* * Tiny Horse */
+.horseGallop {
+  font-size: 24px;
+  bottom: 30px;
+  position: absolute;
+  animation: gallop 2.5s linear;
+}
+
+@keyframes gallop {
+  from {
+    transform: translateX(-100vw);
+  }
+  to {
+    transform: translateX(100vw);
+  }
+}
+
+/* * Weather */
+.cloud {
+  font-size: 64px;
+  animation: cloudFloat 5s ease-in-out infinite;
+}
+
+.rain {
+  position: absolute;
+  inset: 0;
+}
+
+.raindrop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: rgba(100, 150, 255, 0.6);
+  animation: rainFall 1s linear infinite;
+}
+
+@keyframes cloudFloat {
+  0%, 100% {
+    transform: translateX(-20px);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+}
+
+@keyframes rainFall {
+  from {
+    transform: translateY(-100vh);
+  }
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+.weatherText {
+  margin-top: 100px;
+  font-size: 18px;
+  color: #fff;
+}
+
+/* * Screen Shrink */
+.screenShrink {
+  animation: shrinkScreen 2s ease-in-out;
+}
+
+@keyframes shrinkScreen {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.3);
+  }
+}
+
+/* * Fake Celebration */
+.confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.confettiPiece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -20px;
+  animation: confettiFall 3s linear forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+.celebrationText {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  animation: celebrationPop 0.5s ease-out;
+}
+
+@keyframes celebrationPop {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* * Day Night Cycle */
+.skyGradient {
+  position: absolute;
+  inset: 0;
+  animation: skyChange 5s linear;
+}
+
+@keyframes skyChange {
+  0% {
+    background: linear-gradient(to bottom, #87ceeb, #f0e68c);
+  }
+  50% {
+    background: linear-gradient(to bottom, #191970, #000000);
+  }
+  100% {
+    background: linear-gradient(to bottom, #87ceeb, #f0e68c);
+  }
+}
+
+.sun {
+  font-size: 64px;
+  position: absolute;
+  top: 20%;
+  animation: sunRise 5s linear;
+}
+
+.moon {
+  font-size: 64px;
+  position: absolute;
+  top: 20%;
+  animation: moonRise 5s linear;
+}
+
+@keyframes sunRise {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes moonRise {
+  0%, 50% {
+    opacity: 0;
+  }
+  51%, 100% {
+    opacity: 1;
+  }
+}
+
+/* * Fake Timer */
+.fakeTimerDisplay {
+  font-size: 72px;
+  font-weight: 900;
+  color: #ff3b30;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 12px;
+  animation: timerFlash 0.3s ease-out;
+}
+
+.timerDisclaimer {
+  font-size: 18px;
+  color: #fff;
+}
+
+@keyframes timerFlash {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* * Anticipation */
+.darkOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  animation: darken 2s ease-in-out;
+}
+
+.anticipationText {
+  font-size: 20px;
+  color: #fff;
+  z-index: 10;
+  animation: fadeInUp 1s ease-out 1s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+@keyframes darken {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* * False Safety */
+.safetyText {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  padding: 0 30px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* * Distraction text common style */
+.distractionText {
+  font-size: 18px;
+  color: #fff;
+  margin-top: 20px;
+  text-align: center;
+  padding: 0 30px;
+}
+
+/* * Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .screenShake,
+  .bouncingEmoji,
+  .upsideDown,
+  .screenShrink {
+    animation: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .fakeCelebration .confetti {
+    display: none;
+  }
+}

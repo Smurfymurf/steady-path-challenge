@@ -3,8 +3,8 @@
  */
 export const gameConfig = {
   gameName: 'Finger Challenge',
-  tagline: 'Beat the clock.\nDon’t touch the walls.',
-  challengeLine: 'How steady is your finger?',
+  tagline: 'Guess the time.\nNo timer.',
+  challengeLine: 'Can you feel the seconds?',
   levels: 3,
   startingLives: 3,
   /** Fallback hold if score card is skipped. */
@@ -26,7 +26,7 @@ export const gameConfig = {
   /** Edge ratio above this counts as a near-miss (0–1 of half-width used). */
   nearMissEdgeRatio: 0.78,
   shareUrl: 'https://steady-path-challenge.netlify.app',
-  shareText: 'I dare you to beat Finger Challenge without touching the walls.',
+  shareText: 'I was 0.437 seconds away from exactly 10 seconds. Beat me at Finger Challenge.',
 } as const;
 
 export type GameState =

@@ -1,0 +1,278 @@
+/**
+ * Result screen styles.
+ */
+
+.container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.content {
+  max-width: 500px;
+  width: 100%;
+}
+
+.recordBanner {
+  position: relative;
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confettiPiece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  top: -10px;
+  animation: confettiFall 2s ease-in-out forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(400px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.recordTitle {
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffd700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+  animation: recordPop 0.5s ease-out;
+}
+
+@keyframes recordPop {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.results {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.resultRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.resultRow:last-child {
+  border-bottom: none;
+}
+
+.errorRow {
+  margin-top: 8px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.value {
+  font-size: 32px;
+  font-weight: 900;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+.errorValue {
+  color: #ff3b30;
+  font-size: 40px;
+}
+
+.performance {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.performanceLabel {
+  font-size: 24px;
+  font-weight: 900;
+  color: #667eea;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.errorDescription {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.personalBest {
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.pbLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 4px 0;
+}
+
+.pbValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffd700;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button {
+  width: 100%;
+  padding: 18px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease-out;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tertiaryButton {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.tertiaryButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.linkButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  padding: 12px;
+  cursor: pointer;
+  transition: color 0.2s ease-out;
+}
+
+.linkButton:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .recordTitle {
+    font-size: 22px;
+  }
+  
+  .value {
+    font-size: 28px;
+  }
+  
+  .errorValue {
+    font-size: 34px;
+  }
+  
+  .performanceLabel {
+    font-size: 20px;
+  }
+  
+  .button {
+    font-size: 16px;
+    padding: 16px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .recordTitle,
+  .confettiPiece {
+    animation: none;
+  }
+  
+  .confetti {
+    display: none;
+  }
+}
