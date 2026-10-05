@@ -14,10 +14,19 @@ import type { ChallengeDuration, GamePhase, PersonalBest, ScheduledDistraction, 
 import { calculateResult } from '../timer';
 import { generateDistractionSequence, preloadDistractionAssets } from '../distractionEngine';
 import { getGameConfig, getPersonalBest, savePersonalBest, recordRound, getAllPersonalBests } from '../storage';
+import {
+  trackLandingViewed,
+  trackDurationSelected,
+  trackRoundStarted,
+  trackRoundCompleted,
+  trackPersonalBest,
+  trackRetryClicked,
+} from '../analytics';
 import { DurationSelector } from './DurationSelector';
 import { HoldZone } from './HoldZone';
 import { ResultScreen } from './ResultScreen';
 import { DistractionRenderer } from './DistractionRenderer';
+import { Settings } from './Settings';
 import styles from './FingerGame.module.css';
 
 export function FingerGame() {
@@ -28,6 +37,7 @@ export function FingerGame() {
   const [personalBest, setPersonalBest] = useState<PersonalBest | null>(null);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [currentDistraction, setCurrentDistraction] = useState<ScheduledDistraction | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [allPBs, setAllPBs] = useState<Record<ChallengeDuration, PersonalBest | null>>({
     10: null,
     20: null,
@@ -41,6 +51,12 @@ export function FingerGame() {
   const triggeredDistractionsRef = useRef<ScheduledDistraction[]>([]);
   const animationFrameRef = useRef<number>(0);
   const config = useRef(getGameConfig());
+  const roundCountRef = useRef(0);
+  
+  // * Track landing view on mount.
+  useEffect(() => {
+    trackLandingViewed();
+  }, []);
   
   // * Load all personal bests on mount.
   useEffect(() => {
@@ -134,6 +150,9 @@ export function FingerGame() {
     startTimeRef.current = performance.now();
     setHeld(true);
     setPhase('holding');
+    
+    // * Track round start.
+    trackRoundStarted(selectedDuration, seed);
   }, [selectedDuration, phase]);
   
   const endHold = useCallback((event?: ReactPointerEvent<HTMLDivElement>) => {
@@ -169,6 +188,7 @@ export function FingerGame() {
     
     // * Record round.
     recordRound(selectedDuration);
+    roundCountRef.current += 1;
     
     // * Check personal best.
     const pb = getPersonalBest(selectedDuration);
@@ -176,6 +196,19 @@ export function FingerGame() {
       selectedDuration,
       timerResult.errorMs,
     );
+    
+    // * Track analytics.
+    trackRoundCompleted({
+      duration: selectedDuration,
+      actualMs: timerResult.actualMs,
+      errorMs: timerResult.errorMs,
+      direction: timerResult.direction,
+      roundNumber: roundCountRef.current,
+    });
+    
+    if (newRecord) {
+      trackPersonalBest(selectedDuration, timerResult.errorMs);
+    }
     
     setResult(timerResult);
     setPersonalBest(pb || previous);
@@ -198,6 +231,7 @@ export function FingerGame() {
   }, []);
   
   const handleTryAgain = useCallback(() => {
+    trackRetryClicked();
     setResult(null);
     setIsNewRecord(false);
     setCurrentDistraction(null);
@@ -221,9 +255,16 @@ export function FingerGame() {
   }, []);
   
   const handleSelectDuration = useCallback((duration: ChallengeDuration) => {
+    trackDurationSelected(duration);
     setSelectedDuration(duration);
     const pb = getPersonalBest(duration);
     setPersonalBest(pb);
+  }, []);
+  
+  const handleSettingsClose = useCallback(() => {
+    setShowSettings(false);
+    // * Reload config after settings change.
+    config.current = getGameConfig();
   }, []);
   
   return (
@@ -232,6 +273,7 @@ export function FingerGame() {
         <DurationSelector
           personalBests={allPBs}
           onSelectDuration={handleSelectDuration}
+          onSettings={() => setShowSettings(true)}
         />
       )}
       
@@ -260,6 +302,7 @@ export function FingerGame() {
       {phase === 'result' && result && selectedDuration && (
         <ResultScreen
           result={result}
+          duration={selectedDuration}
           personalBest={personalBest}
           isNewRecord={isNewRecord}
           onTryAgain={handleTryAgain}
@@ -274,6 +317,8 @@ export function FingerGame() {
           soundEnabled={config.current.soundEnabled}
         />
       )}
+      
+      <Settings visible={showSettings} onClose={handleSettingsClose} />
     </div>
   );
 }

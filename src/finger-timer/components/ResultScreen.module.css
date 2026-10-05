@@ -206,6 +206,17 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.tertiaryButton {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.tertiaryButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 .linkButton {
   background: transparent;
   border: none;

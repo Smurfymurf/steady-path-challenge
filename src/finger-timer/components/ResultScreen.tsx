@@ -2,12 +2,16 @@
  * Result screen showing timing accuracy.
  */
 
-import type { TimerResult, PersonalBest } from '../types';
+import { useState } from 'react';
+import type { TimerResult, PersonalBest, ChallengeDuration } from '../types';
 import { formatTime, formatError } from '../timer';
+import { shareOrCopy } from '../share';
+import { trackShareClicked, trackShareCompleted } from '../analytics';
 import styles from './ResultScreen.module.css';
 
 interface ResultScreenProps {
   result: TimerResult;
+  duration: ChallengeDuration;
   personalBest: PersonalBest | null;
   isNewRecord: boolean;
   onTryAgain: () => void;
@@ -17,13 +21,31 @@ interface ResultScreenProps {
 
 export function ResultScreen({
   result,
+  duration,
   personalBest,
   isNewRecord,
   onTryAgain,
   onChallengeFrend,
   onChangeDuration,
 }: ResultScreenProps) {
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
   const error = formatError(result.errorMs);
+  
+  const handleShare = async () => {
+    trackShareClicked();
+    const status = await shareOrCopy(duration, result);
+    
+    if (status === 'shared') {
+      setShareStatus('Shared!');
+      trackShareCompleted();
+    } else if (status === 'copied') {
+      setShareStatus('Copied to clipboard!');
+    } else {
+      setShareStatus('Failed to share');
+    }
+    
+    setTimeout(() => setShareStatus(null), 2000);
+  };
   
   return (
     <div className={styles.container}>
@@ -93,6 +115,14 @@ export function ResultScreen({
           <button
             type="button"
             className={[styles.button, styles.secondaryButton].join(' ')}
+            onClick={handleShare}
+          >
+            {shareStatus || 'SHARE RESULT'}
+          </button>
+          
+          <button
+            type="button"
+            className={[styles.button, styles.tertiaryButton].join(' ')}
             onClick={onChallengeFrend}
           >
             CHALLENGE A FRIEND

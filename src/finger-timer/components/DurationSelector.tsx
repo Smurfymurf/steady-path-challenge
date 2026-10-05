@@ -8,13 +8,23 @@ import styles from './DurationSelector.module.css';
 interface DurationSelectorProps {
   personalBests: Record<ChallengeDuration, PersonalBest | null>;
   onSelectDuration: (duration: ChallengeDuration) => void;
+  onSettings: () => void;
 }
 
-export function DurationSelector({ personalBests, onSelectDuration }: DurationSelectorProps) {
+export function DurationSelector({ personalBests, onSelectDuration, onSettings }: DurationSelectorProps) {
   const durations: ChallengeDuration[] = [10, 20, 30, 60];
   
   return (
     <div className={styles.container}>
+      <button
+        type="button"
+        className={styles.settingsButton}
+        onClick={onSettings}
+        aria-label="Settings"
+      >
+        ⚙️
+      </button>
+      
       <div className={styles.content}>
         <div className={styles.header}>
           <h1 className={styles.title}>FINGER CHALLENGE</h1>
