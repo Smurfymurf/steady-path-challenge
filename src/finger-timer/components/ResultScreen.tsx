@@ -15,7 +15,7 @@ interface ResultScreenProps {
   personalBest: PersonalBest | null;
   isNewRecord: boolean;
   onTryAgain: () => void;
-  onChallengeFrend: () => void;
+  onChallengeClick: () => void;
   onChangeDuration: () => void;
 }
 
@@ -25,7 +25,7 @@ export function ResultScreen({
   personalBest,
   isNewRecord,
   onTryAgain,
-  onChallengeFrend,
+  onChallengeClick,
   onChangeDuration,
 }: ResultScreenProps) {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
@@ -115,17 +115,17 @@ export function ResultScreen({
           <button
             type="button"
             className={[styles.button, styles.secondaryButton].join(' ')}
-            onClick={handleShare}
+            onClick={onChallengeClick}
           >
-            {shareStatus || 'SHARE RESULT'}
+            CHALLENGE A FRIEND
           </button>
           
           <button
             type="button"
             className={[styles.button, styles.tertiaryButton].join(' ')}
-            onClick={onChallengeFrend}
+            onClick={handleShare}
           >
-            CHALLENGE A FRIEND
+            {shareStatus || 'SHARE RESULT'}
           </button>
           
           <button

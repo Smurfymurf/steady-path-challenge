@@ -329,3 +329,189 @@ export function FalseSafety() {
     </div>
   );
 }
+
+export function YoureCounting() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>You're counting in your head, aren't you?</p>
+    </div>
+  );
+}
+
+export function StopCounting() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>Stop counting.</p>
+    </div>
+  );
+}
+
+export function AlmostThere() {
+  return (
+    <div className={styles.urgentTaunt}>
+      <p className={styles.urgentText}>Almost there!</p>
+      <p className={styles.urgentSubtext}>Or are you?</p>
+    </div>
+  );
+}
+
+export function WayTooEarly() {
+  return (
+    <div className={styles.urgentTaunt}>
+      <p className={styles.urgentText}>Way too early.</p>
+    </div>
+  );
+}
+
+export function FingerGettingTired() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>Your finger is getting tired.</p>
+    </div>
+  );
+}
+
+export function Overthinking() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>You're overthinking this.</p>
+    </div>
+  );
+}
+
+export function FriendDidBetter() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>Your friend got 0.032 seconds.</p>
+      <p className={styles.tauntSubtext}>Just saying.</p>
+    </div>
+  );
+}
+
+export function FakeVibration() {
+  return (
+    <div className={styles.fakeVibration}>
+      <div className={styles.vibrationPulse} />
+    </div>
+  );
+}
+
+export function ProbablyWrong() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>You're probably way off by now.</p>
+    </div>
+  );
+}
+
+export function TimeParadox() {
+  return (
+    <div className={styles.paradox}>
+      <p className={styles.paradoxText}>Did a second just feel longer?</p>
+      <p className={styles.paradoxSubtext}>Or shorter?</p>
+    </div>
+  );
+}
+
+export function SwipeNotification() {
+  return (
+    <div className={styles.fakeNotification}>
+      <div className={styles.notification}>
+        <div className={styles.notificationIcon}>📱</div>
+        <div className={styles.notificationContent}>
+          <div className={styles.notificationTitle}>New Message</div>
+          <div className={styles.notificationBody}>Why are you touching your screen?</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MathProblem() {
+  return (
+    <div className={styles.mathProblem}>
+      <p className={styles.mathQuestion}>Quick: What's 17 × 23?</p>
+      <p className={styles.mathSubtext}>Just kidding. Keep holding.</p>
+    </div>
+  );
+}
+
+export function DistractedYet() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>Distracted yet?</p>
+    </div>
+  );
+}
+
+export function ReleaseNow() {
+  return (
+    <div className={styles.urgentCommand}>
+      <p className={styles.commandText}>RELEASE NOW</p>
+      <p className={styles.commandSubtext}>(Don't actually)</p>
+    </div>
+  );
+}
+
+export function SecondsFeelLonger() {
+  return (
+    <div className={styles.taunt}>
+      <p className={styles.tauntText}>Seconds feel longer when you're focused on them.</p>
+    </div>
+  );
+}
+
+export function AlreadyFailed() {
+  return (
+    <div className={styles.negativeTaunt}>
+      <p className={styles.negativeText}>You already failed.</p>
+      <p className={styles.negativeSubtext}>Probably.</p>
+    </div>
+  );
+}
+
+export function ScreenDim() {
+  return (
+    <div className={styles.screenDim}>
+      <div className={styles.dimOverlay} />
+    </div>
+  );
+}
+
+export function FakeFinish() {
+  return (
+    <div className={styles.fakeFinish}>
+      <div className={styles.finishText}>TIME'S UP!</div>
+      <div className={styles.finishSubtext}>Just kidding.</div>
+    </div>
+  );
+}
+
+export function ZoomIn() {
+  return (
+    <div className={styles.zoomIn} />
+  );
+}
+
+export function NotificationSpam() {
+  const notifications = [
+    'Battery low',
+    'New email',
+    'Calendar reminder',
+    'Update available',
+  ];
+  
+  return (
+    <div className={styles.notificationSpam}>
+      {notifications.map((text, i) => (
+        <div
+          key={i}
+          className={styles.spamNotification}
+          style={{ animationDelay: `${i * 0.8}s` }}
+        >
+          {text}
+        </div>
+      ))}
+    </div>
+  );
+}

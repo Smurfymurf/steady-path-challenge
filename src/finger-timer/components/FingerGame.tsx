@@ -27,6 +27,7 @@ import { HoldZone } from './HoldZone';
 import { ResultScreen } from './ResultScreen';
 import { DistractionRenderer } from './DistractionRenderer';
 import { Settings } from './Settings';
+import { ChallengeFlow } from './ChallengeFlow';
 import styles from './FingerGame.module.css';
 
 export function FingerGame() {
@@ -38,6 +39,7 @@ export function FingerGame() {
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [currentDistraction, setCurrentDistraction] = useState<ScheduledDistraction | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChallengeFlow, setShowChallengeFlow] = useState(false);
   const [allPBs, setAllPBs] = useState<Record<ChallengeDuration, PersonalBest | null>>({
     10: null,
     20: null,
@@ -241,11 +243,8 @@ export function FingerGame() {
   }, []);
   
   const handleChallengeFrend = useCallback(() => {
-    if (!result || !selectedDuration) return;
-    
-    // * TODO: Implement challenge creation.
-    alert('Challenge friend feature coming soon!');
-  }, [result, selectedDuration]);
+    setShowChallengeFlow(true);
+  }, []);
   
   const handleChangeDuration = useCallback(() => {
     setSelectedDuration(null);
@@ -306,7 +305,7 @@ export function FingerGame() {
           personalBest={personalBest}
           isNewRecord={isNewRecord}
           onTryAgain={handleTryAgain}
-          onChallengeFrend={handleChallengeFrend}
+          onChallengeClick={handleChallengeFrend}
           onChangeDuration={handleChangeDuration}
         />
       )}
@@ -319,6 +318,15 @@ export function FingerGame() {
       )}
       
       <Settings visible={showSettings} onClose={handleSettingsClose} />
+      
+      {result && selectedDuration && (
+        <ChallengeFlow
+          visible={showChallengeFlow}
+          duration={selectedDuration}
+          result={result}
+          onClose={() => setShowChallengeFlow(false)}
+        />
+      )}
     </div>
   );
 }

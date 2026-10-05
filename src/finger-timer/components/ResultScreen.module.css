@@ -10,11 +10,14 @@
   justify-content: center;
   padding: 20px;
   animation: fadeIn 0.5s ease-out;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .content {
   max-width: 500px;
   width: 100%;
+  margin: auto;
 }
 
 .recordBanner {

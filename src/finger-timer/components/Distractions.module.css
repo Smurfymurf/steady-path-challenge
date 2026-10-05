@@ -676,6 +676,294 @@
   animation: fadeInUp 0.5s ease-out;
 }
 
+/* * Taunting Messages */
+.taunt,
+.urgentTaunt,
+.negativeTaunt,
+.paradox,
+.mathProblem,
+.urgentCommand {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tauntText,
+.urgentText,
+.negativeText,
+.paradoxText,
+.commandText {
+  font-size: 24px;
+  color: #fff;
+  text-align: center;
+  padding: 0 30px;
+  animation: fadeInUp 0.4s ease-out;
+  font-weight: 600;
+}
+
+.urgentText {
+  font-size: 36px;
+  font-weight: 900;
+  color: #ff3b30;
+  animation: urgentPulse 0.5s ease-in-out infinite;
+}
+
+.negativeText {
+  font-size: 28px;
+  color: #ff3b30;
+  font-weight: 700;
+}
+
+.commandText {
+  font-size: 48px;
+  font-weight: 900;
+  color: #00ff00;
+  text-transform: uppercase;
+  animation: commandFlash 0.3s ease-in-out infinite;
+}
+
+.tauntSubtext,
+.urgentSubtext,
+.negativeSubtext,
+.paradoxSubtext,
+.mathSubtext,
+.commandSubtext {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  animation: fadeInUp 0.5s ease-out 0.2s backwards;
+}
+
+.mathQuestion {
+  font-size: 28px;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 12px;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* * Fake Vibration */
+.fakeVibration {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  animation: fakeVibrateShake 0.1s ease-in-out 8;
+}
+
+@keyframes fakeVibrateShake {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-2px, 2px);
+  }
+  75% {
+    transform: translate(2px, -2px);
+  }
+}
+
+.vibrationPulse {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.1);
+  animation: vibrationPulse 0.8s ease-out;
+}
+
+@keyframes vibrationPulse {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* * Fake Notification */
+.fakeNotification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  pointer-events: none;
+  padding: 12px;
+  animation: notificationSlideDown 0.4s ease-out;
+}
+
+.notification {
+  background: rgba(30, 30, 30, 0.98);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.notificationIcon {
+  font-size: 32px;
+}
+
+.notificationContent {
+  flex: 1;
+}
+
+.notificationTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.notificationBody {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes notificationSlideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* * Screen Dim */
+.screenDim {
+  position: fixed;
+  inset: 0;
+  z-index: 38;
+  pointer-events: none;
+}
+
+.dimOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  animation: dimFade 1s ease-in-out;
+}
+
+@keyframes dimFade {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* * Fake Finish */
+.fakeFinish {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.9);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.finishText {
+  font-size: 56px;
+  font-weight: 900;
+  color: #ff3b30;
+  animation: finishPop 0.4s ease-out;
+}
+
+.finishSubtext {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  animation: fadeInUp 0.5s ease-out 0.8s backwards;
+}
+
+@keyframes finishPop {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* * Zoom In */
+.zoomIn {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  animation: zoomInEffect 2s ease-in-out;
+}
+
+@keyframes zoomInEffect {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+}
+
+/* * Notification Spam */
+.notificationSpam {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 45;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spamNotification {
+  background: rgba(30, 30, 30, 0.95);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #fff;
+  animation: spamSlideIn 0.3s ease-out;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes spamSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes commandFlash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* * Distraction text common style */
 .distractionText {
   font-size: 18px;

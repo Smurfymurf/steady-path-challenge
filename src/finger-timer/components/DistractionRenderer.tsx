@@ -113,6 +113,46 @@ export function DistractionRenderer({ distraction, soundEnabled }: DistractionRe
       return <Distractions.AnticipationBuildup />;
     case 'false-safety':
       return <Distractions.FalseSafety />;
+    case 'youre-counting':
+      return <Distractions.YoureCounting />;
+    case 'stop-counting':
+      return <Distractions.StopCounting />;
+    case 'almost-there':
+      return <Distractions.AlmostThere />;
+    case 'way-too-early':
+      return <Distractions.WayTooEarly />;
+    case 'finger-getting-tired':
+      return <Distractions.FingerGettingTired />;
+    case 'overthinking':
+      return <Distractions.Overthinking />;
+    case 'friend-did-better':
+      return <Distractions.FriendDidBetter />;
+    case 'fake-vibration':
+      return <Distractions.FakeVibration />;
+    case 'probably-wrong':
+      return <Distractions.ProbablyWrong />;
+    case 'time-paradox':
+      return <Distractions.TimeParadox />;
+    case 'swipe-notification':
+      return <Distractions.SwipeNotification />;
+    case 'math-problem':
+      return <Distractions.MathProblem />;
+    case 'distracted-yet':
+      return <Distractions.DistractedYet />;
+    case 'release-now':
+      return <Distractions.ReleaseNow />;
+    case 'seconds-feel-longer':
+      return <Distractions.SecondsFeelLonger />;
+    case 'already-failed':
+      return <Distractions.AlreadyFailed />;
+    case 'screen-dim':
+      return <Distractions.ScreenDim />;
+    case 'fake-finish':
+      return <Distractions.FakeFinish />;
+    case 'zoom-in':
+      return <Distractions.ZoomIn />;
+    case 'notification-spam':
+      return <Distractions.NotificationSpam />;
     default:
       return null;
   }

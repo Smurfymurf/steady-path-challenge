@@ -21,12 +21,13 @@ import { allDistractionEvents } from './distractionCatalogue';
 
 /**
  * Configuration for distraction scheduling by duration.
+ * Increased frequency for harder gameplay.
  */
 const DISTRACTION_CONFIG = {
-  10: { min: 2, max: 4, maxIntensity: 2 },
-  20: { min: 4, max: 6, maxIntensity: 2 },
-  30: { min: 5, max: 8, maxIntensity: 3 },
-  60: { min: 8, max: 12, maxIntensity: 3 },
+  10: { min: 3, max: 5, maxIntensity: 3 },
+  20: { min: 5, max: 8, maxIntensity: 3 },
+  30: { min: 8, max: 12, maxIntensity: 3 },
+  60: { min: 12, max: 18, maxIntensity: 3 },
 } as const;
 
 /**
