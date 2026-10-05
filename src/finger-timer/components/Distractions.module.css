@@ -103,6 +103,28 @@
   }
 }
 
+/* Smooth fade out for all distractions */
+.tauntTop,
+.tauntBottom,
+.urgentBottom,
+.notificationTop,
+.fakeFinish,
+.countdownCenter {
+  animation-fill-mode: both;
+}
+
+/* Global distraction fade-out */
+@keyframes smoothFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
 /* Fake Time Display */
 .fakeTimeCard {
   background: linear-gradient(135deg, rgba(30, 30, 40, 0.98) 0%, rgba(40, 40, 50, 0.98) 100%);

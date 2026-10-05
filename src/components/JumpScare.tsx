@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { jumpScareVibration } from '../finger-timer/vibration';
 import styles from './JumpScare.module.css';
 
 interface JumpScareProps {
@@ -15,6 +16,8 @@ export function JumpScare({ visible, imageSrc }: JumpScareProps) {
   useEffect(() => {
     if (visible && imageSrc) {
       setBurstKey((value) => value + 1);
+      // * Trigger intense vibration on jump scare
+      jumpScareVibration();
     }
   }, [visible, imageSrc]);
 

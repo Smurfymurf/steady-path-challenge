@@ -2,7 +2,9 @@
  * Hold zone component - the main interaction area.
  */
 
-import { type PointerEvent as ReactPointerEvent } from 'react';
+import { type PointerEvent as ReactPointerEvent, useEffect, useRef } from 'react';
+import { startHoldingVibration, stopVibration } from '../vibration';
+import { HoldingEffects } from './HoldingEffects';
 import styles from './HoldZone.module.css';
 
 interface HoldZoneProps {
@@ -22,8 +24,34 @@ export function HoldZone({
   onPointerUp,
   onPointerCancel,
 }: HoldZoneProps) {
+  const stopVibrationRef = useRef<(() => void) | null>(null);
+  
+  // * Start vibration when holding begins
+  useEffect(() => {
+    if (held) {
+      stopVibrationRef.current = startHoldingVibration();
+    } else {
+      if (stopVibrationRef.current) {
+        stopVibrationRef.current();
+        stopVibrationRef.current = null;
+      }
+      stopVibration();
+    }
+    
+    // * Cleanup on unmount
+    return () => {
+      if (stopVibrationRef.current) {
+        stopVibrationRef.current();
+      }
+      stopVibration();
+    };
+  }, [held]);
+  
   return (
     <div className={styles.container}>
+      {/* Background effects while holding */}
+      {held && <HoldingEffects />}
+      
       {!held && (
         <div className={styles.instructions}>
           <h1 className={styles.title}>PRESS AND HOLD</h1>

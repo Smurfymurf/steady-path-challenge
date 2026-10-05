@@ -1,0 +1,168 @@
+/**
+ * Immersive holding effects styles.
+ */
+
+.container {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Radial pulses emanating from center */
+.radialPulse1,
+.radialPulse2,
+.radialPulse3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  margin: -150px 0 0 -150px;
+  border-radius: 50%;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  animation: pulse 3s ease-out infinite;
+}
+
+.radialPulse2 {
+  animation-delay: 1s;
+  border-color: rgba(118, 75, 162, 0.3);
+}
+
+.radialPulse3 {
+  animation-delay: 2s;
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* Animated gradient overlay */
+.gradientShift {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.05) 40%,
+    transparent 70%
+  );
+  animation: gradientPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes gradientPulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* Connection particles */
+.particles {
+  position: absolute;
+  inset: 0;
+}
+
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: particleOrbit 4s linear infinite;
+  animation-delay: calc(var(--speed) * -2s);
+}
+
+@keyframes particleOrbit {
+  0% {
+    transform: rotate(var(--angle)) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateX(250px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Connection lines SVG */
+.connectionLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.connectionLine {
+  animation: lineGlow 2s ease-in-out infinite;
+}
+
+@keyframes lineGlow {
+  0%, 100% {
+    opacity: 0.2;
+    stroke-width: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+    stroke-width: 1;
+  }
+}
+
+/* Vignette */
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  animation: vignetteIntensify 3s ease-in-out infinite alternate;
+}
+
+@keyframes vignetteIntensify {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .radialPulse1,
+  .radialPulse2,
+  .radialPulse3,
+  .gradientShift,
+  .particle,
+  .connectionLine,
+  .vignette {
+    animation: none;
+    opacity: 0.2;
+  }
+}

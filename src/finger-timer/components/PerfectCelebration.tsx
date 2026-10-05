@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { perfectScoreVibration } from '../vibration';
 import styles from './PerfectCelebration.module.css';
 
 interface PerfectCelebrationProps {
@@ -31,6 +32,9 @@ export function PerfectCelebration({ errorSeconds, targetSeconds }: PerfectCeleb
     
     // * Glow sequence
     setTimeout(() => setShowGlow(true), 200);
+    
+    // * Perfect score vibration
+    perfectScoreVibration();
     
     // * Audio celebration (if available)
     try {
