@@ -27,7 +27,7 @@ import {
 } from './game/session';
 import { playSfx, setSoundEnabled as setAudioEnabled } from './game/sound';
 import type { FailKind } from './components/GameScreen';
-import { PressureTest } from './pressure/PressureTest';
+import { FingerGame } from './finger-timer/components/FingerGame';
 import './styles/global.css';
 import './styles/game.css';
 
@@ -243,9 +243,9 @@ export default function App() {
     );
   }
 
-  // * Homepage (+ legacy /pressure-test) is Pressure Test; maze lives at /maze.
+  // * Homepage is Finger Challenge; maze lives at /maze.
   if (!isMaze) {
-    return <PressureTest />;
+    return <FingerGame />;
   }
 
   const grandTotal = session ? sumLevelScores(session.levelScores) : 0;
