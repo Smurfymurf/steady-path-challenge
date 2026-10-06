@@ -26,6 +26,7 @@ import { DurationSelector } from './DurationSelector';
 import { HoldZone } from './HoldZone';
 import { ResultScreen } from './ResultScreen';
 import { DistractionRenderer } from './DistractionRenderer';
+import { IOS_HAPTIC_ATTRIBUTE } from '../iosHaptics';
 import { Settings } from './Settings';
 import { ChallengeFlow } from './ChallengeFlow';
 import styles from './FingerGame.module.css';
@@ -136,7 +137,16 @@ export function FingerGame() {
       return;
     }
     
-    event.preventDefault();
+    // ! Taps that land on the iOS haptic switch must keep their default
+    // ! action, or the native control never activates and no tick is played.
+    // ! Selection and gesture suppression are handled in CSS regardless.
+    const isHapticTarget =
+      event.target instanceof Element &&
+      event.target.hasAttribute(IOS_HAPTIC_ATTRIBUTE);
+    
+    if (!isHapticTarget) {
+      event.preventDefault();
+    }
     
     // * Capture pointer.
     pointerIdRef.current = event.pointerId;

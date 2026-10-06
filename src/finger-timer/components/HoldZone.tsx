@@ -5,6 +5,7 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useRef } from 'react';
 import { startHoldingVibration, stopVibration } from '../vibration';
 import { HoldingEffects } from './HoldingEffects';
+import { IosHapticTarget } from './IosHapticTarget';
 import styles from './HoldZone.module.css';
 
 interface HoldZoneProps {
@@ -54,9 +55,11 @@ export function HoldZone({
       
       {!held && (
         <div className={styles.instructions}>
-          <h1 className={styles.title}>PRESS AND HOLD</h1>
-          <p className={styles.subtitle}>
-            Lift your finger when you think {targetSeconds} seconds have passed
+          <h1 className={styles.title}>PRESS &amp; HOLD</h1>
+          <p className={styles.subtitle}>Let go at exactly</p>
+          <p className={styles.target}>
+            {targetSeconds}
+            <span className={styles.targetUnit}>seconds</span>
           </p>
         </div>
       )}
@@ -77,6 +80,8 @@ export function HoldZone({
         aria-label={`Hold zone for ${targetSeconds} second challenge`}
         aria-pressed={held}
       >
+        <IosHapticTarget />
+        
         {held && (
           <div className={styles.heldIndicator}>
             <div className={styles.ripple} />

@@ -10,39 +10,69 @@
   justify-content: center;
 }
 
+/*
+ * ! Anchored to the circle's edge rather than the top of the screen, so the
+ * ! gap stays consistent instead of leaving dead space on tall viewports.
+ * ! Half the circle is 140px; the remainder is breathing room.
+ */
 .instructions {
   position: absolute;
-  top: calc(56px + var(--safe-top));
+  bottom: calc(50% + 176px);
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  width: 90%;
-  max-width: 500px;
+  width: 100%;
+  max-width: 420px;
+  padding: 0 24px;
   z-index: 10;
   opacity: 0;
   animation: instructionsFadeIn 0.6s ease-out 0.2s forwards;
 }
 
 .title {
-  font-size: 56px;
+  font-size: 40px;
   font-weight: 900;
   color: #fff;
-  margin: 0 0 12px 0;
-  letter-spacing: -2px;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -1.5px;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.72) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .subtitle {
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  line-height: 1.6;
-  margin: 0;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+  line-height: 1;
+  margin: 18px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+}
+
+/* * The target is the one number that matters, so it carries the emphasis. */
+.target {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  margin: 6px 0 0 0;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.targetUnit {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .holdZone {
@@ -162,16 +192,32 @@
 
 @media (max-width: 480px) {
   .title {
-    font-size: 42px;
+    font-size: 34px;
+    letter-spacing: -1.2px;
   }
   
   .subtitle {
-    font-size: 16px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-top: 15px;
+  }
+  
+  .target {
+    font-size: 44px;
+  }
+  
+  .targetUnit {
+    font-size: 15px;
   }
   
   .holdZone {
     width: 240px;
     height: 240px;
+  }
+  
+  /* * Tracks the smaller circle: half of 240px plus the same breathing room. */
+  .instructions {
+    bottom: calc(50% + 156px);
   }
   
   .centerDot {
@@ -185,23 +231,34 @@
  * * the heading, so both shrink rather than overlapping.
  */
 @media (max-height: 600px) {
-  .instructions {
-    top: calc(16px + var(--safe-top));
-  }
-
   .title {
-    font-size: 32px;
-    margin-bottom: 6px;
+    font-size: 26px;
+    letter-spacing: -0.8px;
   }
 
   .subtitle {
-    font-size: 14px;
-    line-height: 1.4;
+    font-size: 11px;
+    letter-spacing: 1.8px;
+    margin-top: 10px;
+  }
+  
+  .target {
+    font-size: 32px;
+    margin-top: 4px;
+  }
+  
+  .targetUnit {
+    font-size: 13px;
   }
 
   .holdZone {
     width: 170px;
     height: 170px;
+  }
+  
+  /* * Tracks the 170px circle. */
+  .instructions {
+    bottom: calc(50% + 112px);
   }
 
   .centerDot {

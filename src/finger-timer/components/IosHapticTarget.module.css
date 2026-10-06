@@ -1,0 +1,30 @@
+/**
+ * iOS haptic overlay styles.
+ */
+
+/*
+ * ! Deliberately does NOT set `appearance`: stripping the control's native
+ * ! look also disables the system haptic. It is hidden with opacity instead,
+ * ! and stretched over the whole circle so there are no dead zones where a
+ * ! tap would miss the control.
+ */
+.hapticSwitch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  opacity: 0;
+  cursor: pointer;
+  /* * Above the held-colour layer so the finger lands on the control. */
+  z-index: 3;
+  outline: none;
+}
+
+.hapticSwitch:focus,
+.hapticSwitch:focus-visible {
+  outline: none;
+}
